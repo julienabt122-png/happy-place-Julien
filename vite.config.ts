@@ -27,7 +27,7 @@ export default defineConfig({
         deployConfig: true,
         nodeCompat: true,
         // Nom fixe : doit correspondre au Worker relié à GitHub (Workers Builds)
-        wrangler: { name: "happy-place-julien" },
+        wrangler: { name: "happy-place-julien", previews: {} },
       },
     }),
     viteReact(),
