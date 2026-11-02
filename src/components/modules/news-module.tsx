@@ -6,19 +6,13 @@ import { ClickableRow, RowMainButton } from "@/components/clickable-row";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
 import { ConfirmDialog } from "@/components/modules/confirm-dialog";
-import { NewsImage, NewsLinks, NewsMediaEditor } from "@/components/news-media";
+import { NewsDraftDialog } from "@/components/modules/news-draft-dialog";
+import { NewsImage, NewsLinks } from "@/components/news-media";
 import { NewsReader } from "@/components/news-reader";
 import { usePublishDraft } from "@/components/modules/use-publish-draft";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
-import { deleteDraftNews, fetchNews, saveDraftNews, timeAgo, type News } from "@/lib/dashboard";
-import {
-  emptyMedia,
-  linkErrors,
-  mediaFromNews,
-  toNewsLinks,
-  type MediaDraft,
-} from "@/lib/news-media";
+import { deleteDraftNews, fetchNews, timeAgo, type News } from "@/lib/dashboard";
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   return (
@@ -43,31 +37,11 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
   const isAdmin = role === "admin";
   const canWriteNews = role === "admin" || role === "manager";
   const myEmail = email.toLowerCase();
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
-  const [media, setMedia] = useState<MediaDraft>(emptyMedia);
-  const [showLinkErrs, setShowLinkErrs] = useState(false);
-  const newsLinkErrs = showLinkErrs ? linkErrors(media.links) : {};
   const [readingNews, setReadingNews] = useState<News | null>(null);
   const [draftToDelete, setDraftToDelete] = useState<News | null>(null);
 
   const news = useQuery({ queryKey: ["news"], queryFn: fetchNews, retry: false });
   const onError = (e: unknown) => toast.error((e as Error).message);
-
-  const saveDraft = useMutation({
-    mutationFn: saveDraftNews,
-    onSuccess: () => {
-      setTitle("");
-      setBody("");
-      setEditingNewsId(null);
-      setMedia(emptyMedia());
-      setShowLinkErrs(false);
-      toast.success("Brouillon enregistré");
-      qc.invalidateQueries({ queryKey: ["news"] });
-    },
-    onError,
-  });
 
   const publishDraft = usePublishDraft();
 
@@ -98,94 +72,22 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
         counter={
           canWriteNews ? `${drafts} brouillon${drafts > 1 ? "s" : ""} en attente` : undefined
         }
+        footer={
+          canWriteNews ? (
+            <NewsDraftDialog
+              email={email}
+              fallbackName={name}
+              trigger={
+                <Button type="button">
+                  <Icon name="edit_note" className="text-[18px]" /> Rédiger une actualité
+                </Button>
+              }
+            />
+          ) : undefined
+        }
       >
         <div className="flex flex-col gap-md p-6">
-          {canWriteNews && (
-            <form
-              className="space-y-md"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!title.trim()) return;
-                setShowLinkErrs(true);
-                if (Object.keys(linkErrors(media.links)).length) {
-                  toast.error("Corrige les liens invalides avant d'enregistrer.");
-                  return;
-                }
-                saveDraft.mutate({
-                  links: toNewsLinks(media.links),
-                  media,
-                  id: editingNewsId ?? undefined,
-                  title: title.trim(),
-                  body,
-                  author: name,
-                  author_email: myEmail,
-                });
-              }}
-            >
-              <div className="space-y-xs">
-                <label
-                  htmlFor="news-title"
-                  className="font-label-md text-label-md text-on-surface-variant block"
-                >
-                  TITRE
-                </label>
-                <input
-                  id="news-title"
-                  className="w-full bg-transparent border-b border-outline-variant focus:border-primary focus:outline-none transition-colors font-headline-sm text-headline-sm px-0 py-xs"
-                  placeholder="Saisis un titre…"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-              <div className="space-y-xs">
-                <label
-                  htmlFor="news-body"
-                  className="font-label-md text-label-md text-on-surface-variant block"
-                >
-                  CONTENU
-                </label>
-                <textarea
-                  id="news-body"
-                  className="w-full bg-card border border-outline-variant focus:border-primary focus:outline-none p-sm font-body-md"
-                  placeholder="Rédige l'actualité…"
-                  rows={4}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-sm">
-                <NewsMediaEditor
-                  value={media}
-                  onChange={setMedia}
-                  linkErrs={newsLinkErrs}
-                  disabled={saveDraft.isPending}
-                  title={title}
-                />
-                <div className="flex items-center gap-sm">
-                  {editingNewsId && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingNewsId(null);
-                        setTitle("");
-                        setBody("");
-                        setMedia(emptyMedia());
-                        setShowLinkErrs(false);
-                      }}
-                    >
-                      Annuler
-                    </Button>
-                  )}
-                  <Button type="submit" disabled={saveDraft.isPending}>
-                    {saveDraft.isPending ? "Enregistrement…" : "Enregistrer le brouillon"}
-                  </Button>
-                </div>
-              </div>
-            </form>
-          )}
-          <div className={canWriteNews ? "mt-md pt-md border-t border-outline-variant" : ""}>
+          <div>
             {canWriteNews && visibleDrafts.length > 0 && (
               <>
                 <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm">
@@ -216,20 +118,16 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                         </div>
                         {allowed && (
                           <div className="flex items-center gap-sm shrink-0">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setEditingNewsId(n.id);
-                                setTitle(n.title);
-                                setBody(n.body ?? "");
-                                setMedia(mediaFromNews(n));
-                                setShowLinkErrs(false);
-                              }}
-                            >
-                              Modifier
-                            </Button>
+                            <NewsDraftDialog
+                              email={email}
+                              fallbackName={name}
+                              draft={n}
+                              trigger={
+                                <Button type="button" variant="outline" size="sm">
+                                  Modifier
+                                </Button>
+                              }
+                            />
                             <Button
                               type="button"
                               variant="outline"

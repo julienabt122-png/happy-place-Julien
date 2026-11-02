@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ClickableRow, RowChevron, RowMainButton } from "@/components/clickable-row";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
+import { NewsDraftDialog } from "@/components/modules/news-draft-dialog";
 import { usePublishDraft } from "@/components/modules/use-publish-draft";
 import { NewsReader } from "@/components/news-reader";
 import { NewsThumb } from "@/components/news-thumb";
@@ -28,10 +29,13 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
 export function NewsCard({
   role,
   email,
+  fallbackName,
   news,
 }: {
   role: AppRole;
   email: string;
+  /** Auteur des nouveaux brouillons quand le profil n'a ni prénom ni nom. */
+  fallbackName: string;
   news: UseQueryResult<News[]>;
 }) {
   const navigate = useNavigate();
@@ -63,11 +67,15 @@ export function NewsCard({
       footer={
         canReview ? (
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <Button asChild>
-              <Link to="/actualites">
-                <Icon name="edit_note" className="text-[18px]" /> Rédiger une actualité
-              </Link>
-            </Button>
+            <NewsDraftDialog
+              email={email}
+              fallbackName={fallbackName}
+              trigger={
+                <Button type="button">
+                  <Icon name="edit_note" className="text-[18px]" /> Rédiger une actualité
+                </Button>
+              }
+            />
             {role === "admin" && drafts.length > 0 && (
               <div className="flex flex-col items-end gap-0.5 text-right">
                 <Link

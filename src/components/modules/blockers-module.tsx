@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
+import { BlockerFormDialog } from "@/components/modules/blocker-form-dialog";
 import { Button } from "@/components/ui/button";
 import { BlockerArchive } from "@/components/dashboard-extras";
 import type { AppRole } from "@/lib/auth";
@@ -38,6 +39,18 @@ export function BlockersModule({ role }: { role: AppRole }) {
         title="Points bloquants"
         counter={blockers.data ? `${blockers.data.length} en cours` : undefined}
         counterTone="dark"
+        footer={
+          // Même règle que l'accueil : création réservée à l'admin (la base refuse les autres rôles).
+          isAdmin ? (
+            <BlockerFormDialog
+              trigger={
+                <Button type="button">
+                  <Icon name="add" className="text-[18px]" /> Créer un point bloquant
+                </Button>
+              }
+            />
+          ) : undefined
+        }
         headerAction={
           <Button
             type="button"

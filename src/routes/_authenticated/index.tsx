@@ -7,6 +7,7 @@ import { DemandesCard } from "@/components/home/demandes-card";
 import { MetricsCard } from "@/components/home/metrics-card";
 import { NewsCard } from "@/components/home/news-card";
 import { useHomeDemandes, type DemandesTab } from "@/components/home/use-home-demandes";
+import { userDisplayName } from "@/components/modules/news-module";
 import { useMyProfile } from "@/components/modules/use-my-profile";
 import { fetchBlockers, fetchMetrics, fetchNews } from "@/lib/dashboard";
 import { plural } from "@/lib/plural";
@@ -37,7 +38,7 @@ const SUMMARY_LINK =
   "rounded-sm font-semibold underline decoration-1 underline-offset-4 transition-all duration-150 hover:decoration-2";
 
 function ManagerSpace() {
-  const { role, email } = Route.useRouteContext();
+  const { role, email, user } = Route.useRouteContext();
   const profile = useMyProfile(email);
   const canReview = role === "admin" || role === "manager";
   const data = useHomeDemandes(role, email);
@@ -142,7 +143,12 @@ function ManagerSpace() {
       <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
         <DemandesCard role={role} email={email} data={data} tab={tab} onTabChange={setTab} />
         <div className="flex flex-col justify-between gap-6">
-          <NewsCard role={role} email={email} news={news} />
+          <NewsCard
+            role={role}
+            email={email}
+            fallbackName={userDisplayName(user, email)}
+            news={news}
+          />
           <BlockersCard role={role} blockers={blockers} />
         </div>
       </div>

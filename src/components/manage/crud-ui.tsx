@@ -139,11 +139,12 @@ export function FormActions({
 
 /**
  * Pied de fenêtre (maquettes) : bordure haute, marges de 24 px, 16 px entre les boutons.
- * Posé dans le corps d'un FormDialog (p-6) : les marges négatives le font toucher les bords.
+ * Posé dans le corps d'un FormDialog (p-6) : les marges négatives le font toucher les bords,
+ * et `sticky` le garde visible en bas quand le contenu défile.
  */
 export function FormFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="-mx-6 -mb-6 mt-6 flex items-center justify-end gap-4 border-t border-outline-variant bg-card p-6">
+    <div className="sticky bottom-0 -mx-6 -mb-6 mt-6 flex items-center justify-end gap-4 border-t border-outline-variant bg-card p-6">
       {children}
     </div>
   );

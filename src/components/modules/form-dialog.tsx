@@ -67,15 +67,16 @@ export function FormDialog({
               ? undefined
               : autoReturnFocus
         }
-        className="max-h-[90vh] w-[640px] max-w-[calc(100vw-2rem)] gap-0 overflow-y-auto p-0"
+        className="flex max-h-[90vh] w-[640px] max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden p-0"
       >
-        <div className="flex h-14 items-center border-b border-outline-variant bg-secondary pl-6 pr-14">
+        <div className="flex h-14 shrink-0 items-center border-b border-outline-variant bg-secondary pl-6 pr-14">
           <DialogTitle className="font-display text-[18px] font-bold leading-tight text-primary">
             {title}
           </DialogTitle>
           <DialogDescription className="sr-only">{description}</DialogDescription>
         </div>
-        <div className="p-6">{children}</div>
+        {/* Seul le corps défile : le bandeau reste en haut et le pied (FormFooter, collant) en bas. */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">{children}</div>
       </DialogContent>
     </Dialog>
   );

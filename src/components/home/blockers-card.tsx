@@ -1,8 +1,9 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { ClickableRow, RowChevron, RowMainButton } from "@/components/clickable-row";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
+import { BlockerFormDialog } from "@/components/modules/blocker-form-dialog";
 import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
@@ -30,14 +31,16 @@ export function BlockersCard({
       seeAllLabel="Voir tout : points bloquants"
       footer={
         role === "admin" ? (
-          <Button asChild className="w-fit">
-            <Link to="/manage/blockers">
-              <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-                add
-              </span>
-              Créer un point bloquant
-            </Link>
-          </Button>
+          <BlockerFormDialog
+            trigger={
+              <Button type="button" className="w-fit">
+                <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+                  add
+                </span>
+                Créer un point bloquant
+              </Button>
+            }
+          />
         ) : undefined
       }
     >
