@@ -20,7 +20,6 @@ export function SubmissionTracking({
   decision: Decision | undefined;
 }) {
   const decided = s.status === "validée" || s.status === "refusée";
-  const note = s.rejection_note?.trim();
   return (
     <>
       {mine && s.status === "en attente" && (
@@ -37,7 +36,6 @@ export function SubmissionTracking({
       {s.status === "refusée" && s.rejection_category && (
         <span className="block font-label-sm text-xs text-on-surface-variant wrap-anywhere">
           Motif : {s.rejection_category}
-          {note ? ` (${note})` : ""}
         </span>
       )}
     </>
