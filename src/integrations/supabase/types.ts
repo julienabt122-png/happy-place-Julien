@@ -55,6 +55,7 @@ export type Database = {
           id: string
           last_name: string | null
           team: string | null
+          welcome_seen_at: string | null
         }
         Insert: {
           created_at?: string
@@ -64,6 +65,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           team?: string | null
+          welcome_seen_at?: string | null
         }
         Update: {
           created_at?: string
@@ -73,6 +75,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           team?: string | null
+          welcome_seen_at?: string | null
         }
         Relationships: [
           {
@@ -450,6 +453,7 @@ export type Database = {
       }
     }
     Functions: {
+      marquer_accueil_vu: { Args: Record<PropertyKey, never>; Returns: string }
       choisir_mon_role: {
         Args: {
           _first_name: string

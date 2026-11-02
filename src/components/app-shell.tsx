@@ -1,7 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { BrandHeader } from "@/components/brand-header";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { useMyProfile } from "@/components/modules/use-my-profile";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,6 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useWelcomeSeen } from "@/components/welcome/use-welcome-seen";
+import { WelcomeModal } from "@/components/welcome/welcome-modal";
 import { signOut, type AppRole } from "@/lib/auth";
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
@@ -66,6 +69,19 @@ export function AppShell({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = role === "admin";
+  const profile = useMyProfile(email);
+  const welcomeSeen = useWelcomeSeen(email);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeAutoShown, setWelcomeAutoShown] = useState(false);
+
+  // Première arrivée dans le cadre (accueil non encore vu) : la modale s'ouvre une seule fois.
+  // AppShell n'enveloppe que les pages connectées : /auth et /choisir-role n'en font pas partie.
+  useEffect(() => {
+    if (welcomeSeen.data === false && !welcomeAutoShown) {
+      setWelcomeAutoShown(true);
+      setWelcomeOpen(true);
+    }
+  }, [welcomeSeen.data, welcomeAutoShown]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-on-surface font-body-md">
@@ -144,8 +160,8 @@ export function AppShell({
             variant="outline"
             size="icon"
             aria-label="Aide"
-            aria-disabled="true"
-            title="Aide (bientôt disponible)"
+            aria-haspopup="dialog"
+            onClick={() => setWelcomeOpen(true)}
             className="border-outline-variant bg-card hover:bg-hover-gris"
           >
             <Icon name="help_outline" />
@@ -184,8 +200,8 @@ export function AppShell({
             <Button
               type="button"
               variant="ghost"
-              aria-disabled="true"
-              title="Aide (bientôt disponible)"
+              aria-haspopup="dialog"
+              onClick={() => setWelcomeOpen(true)}
               className={`${ENTRY_IDLE} w-full justify-start rounded-none`}
             >
               <Icon name="help_outline" className="text-primary" />
@@ -202,6 +218,13 @@ export function AppShell({
           {children}
         </main>
       </div>
+      <WelcomeModal
+        open={welcomeOpen}
+        onOpenChange={setWelcomeOpen}
+        role={role}
+        email={email}
+        firstName={profile.data?.firstName ?? null}
+      />
     </div>
   );
 }
