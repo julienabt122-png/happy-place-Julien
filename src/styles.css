@@ -10,8 +10,8 @@
  * The @theme inline block maps CSS custom properties to Tailwind utility
  * classes (e.g. --color-primary -> bg-primary, text-primary).
  *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
+ * The :root and .dark blocks define the actual color values using hex values.
+ * Colors use the exact hex values of the charte (docs/spec-interface.md).
  *
  * To add a new semantic color:
  * 1. Add the variable to :root (light value) and .dark (dark value)
@@ -19,10 +19,10 @@
  */
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -49,7 +49,7 @@
   --color-border: var(--outline-variant);
   --color-outline: var(--outline);
   --color-outline-variant: var(--outline-variant);
-  --color-input: var(--outline-variant);
+  --color-input: var(--outline);
   --color-ring: var(--primary);
   --color-surface: var(--surface);
   --color-on-surface: var(--foreground);
@@ -59,14 +59,18 @@
   --color-surface-container-high: var(--surface-container-high);
   --color-surface-container-highest: var(--surface-container-highest);
   --color-success: var(--success);
+  --color-highlight: var(--highlight);
+  --color-highlight-hover: var(--highlight-hover);
+  --color-on-highlight: var(--on-highlight);
+  --color-hover-gris: var(--hover-gris);
 
-  --font-display: "Bodoni Moda", Georgia, serif;
-  --font-headline-lg: "Bodoni Moda", Georgia, serif;
-  --font-headline-sm: "Bodoni Moda", Georgia, serif;
-  --font-body-md: "Inter Tight", system-ui, sans-serif;
-  --font-body-sm: "Inter Tight", system-ui, sans-serif;
-  --font-label-md: "Space Grotesk", system-ui, sans-serif;
-  --font-label-sm: "Space Grotesk", system-ui, sans-serif;
+  --font-display: "Comfortaa", system-ui, sans-serif;
+  --font-headline-lg: "Comfortaa", system-ui, sans-serif;
+  --font-headline-sm: "Comfortaa", system-ui, sans-serif;
+  --font-body-md: "Inter", system-ui, sans-serif;
+  --font-body-sm: "Inter", system-ui, sans-serif;
+  --font-label-md: "JetBrains Mono", ui-monospace, monospace;
+  --font-label-sm: "JetBrains Mono", ui-monospace, monospace;
 
   --text-headline-lg: 2.75rem;
   --text-headline-lg--line-height: 1.05;
@@ -91,46 +95,57 @@
 
   --container-interface: 88rem;
 
-  --shadow-sm: 0 1px 0 0 var(--outline);
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
 }
 
 :root {
-  --radius: 0rem;
-  --background: oklch(0.968 0.004 90);
-  --foreground: oklch(0.26 0.008 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.26 0.008 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.26 0.008 285);
-  --primary: oklch(0.28 0.009 285);
-  --on-primary: oklch(0.98 0.004 90);
-  --secondary: oklch(0.72 0.062 20);
-  --on-secondary: oklch(0.24 0.01 20);
-  --secondary-fixed: oklch(0.9 0.036 20);
-  --tertiary-fixed: oklch(0.88 0.045 55);
-  --on-tertiary-fixed: oklch(0.32 0.05 45);
-  --muted: oklch(0.94 0.003 90);
-  --accent: oklch(0.92 0.03 20);
-  --error: oklch(0.53 0.19 25);
-  --error-container: oklch(0.9 0.05 25);
-  --on-error-container: oklch(0.35 0.14 25);
-  --success: oklch(0.55 0.13 150);
-  --outline: oklch(0.45 0.008 285);
-  --outline-variant: oklch(0.85 0.005 285);
-  --surface: oklch(0.98 0.003 90);
-  --on-surface-variant: oklch(0.52 0.008 285);
-  --surface-container-lowest: oklch(1 0 0);
-  --surface-container: oklch(0.945 0.004 90);
-  --surface-container-high: oklch(0.92 0.005 90);
-  --surface-container-highest: oklch(0.895 0.005 90);
-  --sidebar: var(--surface);
+  --radius: 8px;
+  --background: #FBF9F8;
+  --foreground: #1B1C1C;
+  --card: #FFFFFF;
+  --card-foreground: #1B1C1C;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B1C1C;
+  --primary: #171818;
+  --on-primary: #FFFFFF;
+  --secondary: #EFEDED;
+  --on-secondary: #171818;
+  --secondary-fixed: #FCDBDB;
+  --tertiary-fixed: #FFF1CC;
+  --on-tertiary-fixed: #8A5A00;
+  --muted: #EFEDED;
+  --accent: #EFEDED;
+  --highlight: #FCDBDB;
+  --highlight-hover: #DEBFBF;
+  --on-highlight: #171818;
+  --hover-gris: #E2DEDD;
+  --error: #BA1A1A;
+  --error-container: #FFC4BC;
+  --on-error-container: #BA1A1A;
+  --success: #2D6A3E;
+  --outline: #747878;
+  --outline-variant: #E6E6E1;
+  --surface: #FBF9F8;
+  --on-surface-variant: #444748;
+  --surface-container-lowest: #FFFFFF;
+  --surface-container: #EFEDED;
+  --surface-container-high: #E2DEDD;
+  --surface-container-highest: #E2DEDD;
+  --sidebar: #FFFFFF;
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--on-primary);
-  --sidebar-accent: var(--accent);
+  --sidebar-accent: #FCDBDB;
   --sidebar-accent-foreground: var(--foreground);
-  --sidebar-border: var(--outline-variant);
-  --sidebar-ring: var(--primary);
+  --sidebar-border: #E6E6E1;
+  --sidebar-ring: #171818;
 }
 
 @layer base {
@@ -142,6 +157,16 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-body-md);
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid #171818;
+    outline-offset: 2px;
   }
 }
 
