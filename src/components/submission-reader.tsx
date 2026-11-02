@@ -3,6 +3,7 @@ import { Linkify } from "@/components/linkify";
 import { AttachmentLink } from "@/components/attachment-link";
 import { formatExactDate } from "@/components/expandable-card";
 import { STATUS_LABELS } from "@/components/status-tag";
+import { SubmissionHistory } from "@/components/submission-history";
 import { Button } from "@/components/ui/button";
 import type { Submission } from "@/lib/dashboard";
 import { useReturnFocus } from "@/lib/use-return-focus";
@@ -59,6 +60,7 @@ export function SubmissionReader({
                   <p className="whitespace-pre-line">Raison : <Linkify text={s.rejection_note ?? ""} /></p>
                 </div>
               )}
+              <SubmissionHistory submissionId={s.id} />
             </div>
             {(onReject || onApprove) && (
               <div className="flex gap-xs border-t border-outline-variant p-md">
