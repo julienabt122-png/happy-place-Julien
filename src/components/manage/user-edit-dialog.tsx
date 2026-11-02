@@ -251,7 +251,10 @@ function EditForm({
         </p>
       )}
 
-      <div className="sticky bottom-0 -mx-6 -mb-6 mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-outline-variant bg-card p-6">
+      <div
+        data-form-footer
+        className="sticky bottom-0 -mx-6 mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-outline-variant bg-card p-6"
+      >
         <div className="flex flex-wrap items-center gap-2">
           {!isMe && (
             <Button type="button" variant="link" disabled={pending} onClick={() => onRetire(u)}>

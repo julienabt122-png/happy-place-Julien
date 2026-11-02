@@ -75,8 +75,12 @@ export function FormDialog({
           </DialogTitle>
           <DialogDescription className="sr-only">{description}</DialogDescription>
         </div>
-        {/* Seul le corps défile : le bandeau reste en haut et le pied (FormFooter, collant) en bas. */}
-        <div className="min-h-0 flex-1 overflow-y-auto p-6">{children}</div>
+        {/* Seul le corps défile : le bandeau reste en haut et le pied (FormFooter, collant) en bas.
+            Marge de 24 px partout (le contour de focus dépasse de 4 px). Avec un pied, pas de marge basse :
+            le pied collant se cale sur le bord bas, sans décalage ni zone blanche sous les boutons. */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-6 has-[[data-form-footer]]:pb-0">
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   );
