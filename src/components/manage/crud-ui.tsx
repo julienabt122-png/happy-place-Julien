@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { FormDialog } from "@/components/modules/form-dialog";
+import { Button } from "@/components/ui/button";
 import type { FieldErrors } from "@/lib/manage-schemas";
 
 export function ManageIcon({ name, className = "" }: { name: string; className?: string }) {
@@ -48,6 +50,10 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={`${inputBase} ${props.className ?? ""}`} />;
 }
 
+/**
+ * Fenêtre des pages /manage, montée tant qu'elle est affichée. Reconstruite sur le Dialog
+ * shadcn (FormDialog) : Échap ferme, le focus revient au bouton d'origine.
+ */
 export function Modal({
   title,
   onClose,
@@ -58,34 +64,16 @@ export function Modal({
   children: ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-sm md:p-lg">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className="w-full max-w-2xl bg-surface-container-lowest border border-outline p-md space-y-md"
-      >
-        <div className="flex items-center justify-between border-b border-outline-variant pb-sm">
-          <h2 className="font-headline-sm text-headline-sm text-primary">{title}</h2>
-          <button
-            type="button"
-            aria-label="Fermer"
-            onClick={onClose}
-            className="text-on-surface-variant hover:text-primary"
-          >
-            <ManageIcon name="close" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <FormDialog open onOpenChange={(o) => !o && onClose()} title={title} description={title}>
+      {children}
+    </FormDialog>
   );
 }
 
 export function FormActions({
   pending,
   onCancel,
-  submitLabel = "ENREGISTRER",
+  submitLabel = "Enregistrer",
 }: {
   pending?: boolean;
   onCancel: () => void;
@@ -93,20 +81,12 @@ export function FormActions({
 }) {
   return (
     <div className="flex justify-end gap-xs pt-sm">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container"
-      >
-        ANNULER
-      </button>
-      <button
-        type="submit"
-        disabled={pending}
-        className="px-lg py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50"
-      >
+      <Button type="button" variant="outline" onClick={onCancel}>
+        Annuler
+      </Button>
+      <Button type="submit" disabled={pending}>
         {pending ? "…" : submitLabel}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -115,8 +95,13 @@ export function ErrorSummary({ errors }: { errors: FieldErrors }) {
   const count = Object.keys(errors).length;
   if (!count) return null;
   return (
-    <div role="alert" className="text-body-sm text-error border border-error/40 bg-error-container/30 p-sm wrap-anywhere">
-      <p>{count} champ{count > 1 ? "s" : ""} à corriger avant l'enregistrement.</p>
+    <div
+      role="alert"
+      className="text-body-sm text-error border border-error/40 bg-error-container/30 p-sm wrap-anywhere"
+    >
+      <p>
+        {count} champ{count > 1 ? "s" : ""} à corriger avant l'enregistrement.
+      </p>
       <ul className="mt-xs list-disc pl-md">
         {Object.entries(errors).map(([k, m]) => (
           <li key={k}>{m}</li>
@@ -137,21 +122,12 @@ export function RowActions({
 }) {
   return (
     <div className="flex gap-xs shrink-0">
-      <button
-        type="button"
-        onClick={onEdit}
-        className="px-sm py-1 border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container"
-      >
-        MODIFIER
-      </button>
-      <button
-        type="button"
-        onClick={onDelete}
-        disabled={deleting}
-        className="px-sm py-1 border border-error text-error font-label-sm text-label-sm hover:bg-error-container disabled:opacity-50"
-      >
-        SUPPRIMER
-      </button>
+      <Button type="button" variant="outline" size="sm" onClick={onEdit}>
+        Modifier
+      </Button>
+      <Button type="button" variant="outline" size="sm" onClick={onDelete} disabled={deleting}>
+        Supprimer
+      </Button>
     </div>
   );
 }
@@ -170,25 +146,16 @@ export function ConfirmDelete({
   return (
     <Modal title="Confirmer la suppression" onClose={onCancel}>
       <p className="font-body-md text-on-surface">
-        Supprimer définitivement <strong className="text-primary">{label}</strong> ? Cette action est
-        irréversible.
+        Supprimer définitivement <strong className="text-primary">{label}</strong> ? Cette action
+        est irréversible.
       </p>
       <div className="flex justify-end gap-xs pt-sm">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container"
-        >
-          ANNULER
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={pending}
-          className="px-lg py-xs bg-error text-on-error font-label-md text-label-md disabled:opacity-50"
-        >
-          {pending ? "SUPPRESSION…" : "SUPPRIMER"}
-        </button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button type="button" onClick={onConfirm} disabled={pending}>
+          {pending ? "Suppression…" : "Supprimer"}
+        </Button>
       </div>
     </Modal>
   );

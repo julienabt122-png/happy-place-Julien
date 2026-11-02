@@ -23,7 +23,7 @@ const ROLES: { value: AppRole; label: string; description: string }[] = [
   {
     value: "collaborateur",
     label: "Collaborateur",
-    description: "Je lis les actualités et les indicateurs, et je remonte des idées, questions ou problèmes à mon équipe.",
+    description: "Je lis les actualités et les indicateurs, je fais des demandes et je signale des problèmes à mon équipe.",
   },
   {
     value: "manager",
@@ -201,9 +201,9 @@ function ChoisirRolePage() {
 
           <div className="mt-sm flex flex-wrap items-center justify-between gap-xs font-body-sm text-body-sm text-on-surface-variant">
             <span>Ton rôle est gardé dans ce navigateur.</span>
-            <button type="button" onClick={signOut} className="text-primary underline-offset-2 hover:underline">
+            <Button type="button" variant="link" size="sm" onClick={signOut}>
               Recommencer avec un nouveau profil
-            </button>
+            </Button>
           </div>
         </section>
       </main>

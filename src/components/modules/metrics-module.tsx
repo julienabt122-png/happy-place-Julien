@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
+import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { deltaText, fetchMetrics, TREND_LABELS, updateMetric, type Metric } from "@/lib/dashboard";
 
@@ -76,7 +77,7 @@ export function MetricsModule({ role }: { role: AppRole }) {
                 htmlFor="nps-input"
                 className="font-label-sm text-label-sm text-on-surface-variant block"
               >
-                MODIFIER LE NPS CANDIDATS
+                Modifier le NPS candidats
               </label>
               <div className="flex gap-xs">
                 <input
@@ -86,7 +87,8 @@ export function MetricsModule({ role }: { role: AppRole }) {
                   value={nps !== "" ? nps : (npsMetric?.value ?? "")}
                   onChange={(e) => setNps(e.target.value)}
                 />
-                <button
+                <Button
+                  type="button"
                   onClick={() =>
                     saveMetric.mutate({
                       key: "nps",
@@ -94,10 +96,9 @@ export function MetricsModule({ role }: { role: AppRole }) {
                     })
                   }
                   disabled={saveMetric.isPending}
-                  className="bg-primary text-on-primary px-sm font-label-md text-label-md disabled:opacity-50"
                 >
-                  METTRE À JOUR
-                </button>
+                  Mettre à jour
+                </Button>
               </div>
               <p className="text-[10px] text-on-surface-variant italic">
                 {npsMetric

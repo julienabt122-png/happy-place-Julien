@@ -30,7 +30,7 @@ export function useMyTeams(role: string | null | undefined, email: string | null
 }
 
 /**
- * Peut valider ou refuser cette soumission : en attente, et admin (toutes les équipes)
+ * Peut valider ou refuser cette demande : en attente, et admin (toutes les équipes)
  * ou manager (seulement ses équipes). La base fait foi (RLS) ; ceci masque seulement les boutons.
  */
 export function canModerateSubmission(role: string, myTeams: string[], s: Submission) {
@@ -40,7 +40,7 @@ export function canModerateSubmission(role: string, myTeams: string[], s: Submis
   );
 }
 
-/** Export CSV des soumissions récentes de l'utilisateur (même logique qu'à l'origine sur l'accueil). */
+/** Export CSV des demandes récentes de l'utilisateur (même logique qu'à l'origine sur l'accueil). */
 export function useExportReport(email: string | null | undefined) {
   return useMutation({
     mutationFn: () => {
@@ -49,11 +49,11 @@ export function useExportReport(email: string | null | undefined) {
     },
     onSuccess: (count) => {
       if (count === 0) {
-        toast.info("Aucune soumission en attente ou validée sur les 30 derniers jours.");
+        toast.info("Aucune demande en attente ou validée sur les 30 derniers jours.");
         return;
       }
       toast.success(
-        `${count} soumission${count > 1 ? "s" : ""} exportée${count > 1 ? "s" : ""} au format CSV.`,
+        `${count} demande${count > 1 ? "s" : ""} exportée${count > 1 ? "s" : ""} au format CSV.`,
       );
     },
     onError: (e: unknown) => toast.error((e as Error).message),
@@ -61,7 +61,7 @@ export function useExportReport(email: string | null | undefined) {
 }
 
 /**
- * Valider et refuser une soumission : un seul exemplaire pour l'accueil et /demandes.
+ * Valider et refuser une demande : un seul exemplaire pour l'accueil et /demandes.
  * `rejectDialog` est la fenêtre de refus, à placer dans le JSX de la page.
  */
 export function useSubmissionReview({ onApproved }: { onApproved?: (id: string) => void } = {}) {
@@ -75,7 +75,7 @@ export function useSubmissionReview({ onApproved }: { onApproved?: (id: string) 
     onSuccess: (_d, vars) => {
       if (vars.status === "refusée") {
         setRejecting(null);
-        toast.success("Soumission refusée");
+        toast.success("Demande refusée");
       } else {
         onApproved?.(vars.id);
       }
@@ -99,7 +99,7 @@ export function useSubmissionReview({ onApproved }: { onApproved?: (id: string) 
       returnFocusRef={openerRef}
       open={!!rejecting}
       onOpenChange={(o) => !o && setRejecting(null)}
-      title="Refuser la soumission"
+      title="Refuser la demande"
       description="Choisis un motif et explique la raison du refus."
     >
       {rejecting && (
@@ -136,7 +136,7 @@ export function useSubmissionReview({ onApproved }: { onApproved?: (id: string) 
             <TextArea
               rows={4}
               value={rejectForm.rejection_note}
-              placeholder="Explique au collaborateur pourquoi sa soumission est refusée…"
+              placeholder="Explique au collaborateur pourquoi sa demande est refusée…"
               onChange={(e) => setRejectForm({ ...rejectForm, rejection_note: e.target.value })}
             />
             <CharCounter value={rejectForm.rejection_note} max={500} />

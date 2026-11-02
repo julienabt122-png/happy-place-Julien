@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   ConfirmDelete,
   ErrorSummary,
+  ManageIcon,
   Field,
   FormActions,
   Modal,
@@ -13,6 +14,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/manage/crud-ui";
+import { Button } from "@/components/ui/button";
 import { blockerSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
 import {
   createBlocker,
@@ -108,16 +110,16 @@ function ManageBlockers() {
         <h2 className="font-headline-sm text-headline-sm text-primary">
           Points bloquants ({list.data?.length ?? 0})
         </h2>
-        <button
+        <Button
+          type="button"
           onClick={() => {
             setEditing(null);
             setErrors({});
             setForm({ ...empty });
           }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
         >
-          + NOUVEAU POINT BLOQUANT
-        </button>
+          <ManageIcon name="add" className="text-[18px]" /> Nouveau point bloquant
+        </Button>
       </div>
 
       {list.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}

@@ -13,6 +13,7 @@ import {
 } from "@/components/modules/submission-actions";
 import { STATUS_LABELS, StatusTag } from "@/components/status-tag";
 import { SubmissionReader } from "@/components/submission-reader";
+import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { fetchAllSubmissions, type Submission } from "@/lib/dashboard";
 import { plural } from "@/lib/plural";
@@ -91,22 +92,18 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
             Demandes
           </h1>
           <div className="flex items-center gap-4">
-            <button
+            <Button
               type="button"
+              variant="outline"
               disabled={exportReport.isPending}
               onClick={() => exportReport.mutate()}
-              className="flex h-11 items-center gap-2 rounded-[4px] border border-primary bg-transparent px-4 text-sm font-semibold text-primary hover:bg-secondary disabled:opacity-50"
             >
               <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
                 download
               </span>
               {exportReport.isPending ? "Export en cours…" : "Exporter"}
-            </button>
-            <SubmitIdeaAction
-              role={role}
-              email={email}
-              className="flex h-11 items-center gap-2 rounded-[4px] bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-[#4F5252]"
-            >
+            </Button>
+            <SubmitIdeaAction role={role} email={email}>
               <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
                 add
               </span>
@@ -117,13 +114,14 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
         {list.data && (
           <p className="text-base text-foreground">
             {pendingCount > 0 ? (
-              <button
+              <Button
                 type="button"
+                variant="link"
                 onClick={() => changeFilter("pending")}
-                className="rounded-[4px] font-semibold text-primary underline"
+                className="h-auto p-0 text-base font-semibold"
               >
                 {plural(pendingCount, "demande", "demandes")} {pendingLabel}
-              </button>
+              </Button>
             ) : (
               <span className="font-semibold text-primary">Aucune demande {pendingLabel}</span>
             )}{" "}
@@ -139,19 +137,20 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
           className="flex flex-wrap items-center gap-2"
         >
           {filters.map((f) => (
-            <button
+            <Button
               key={f.id}
               type="button"
+              variant="outline"
               aria-pressed={filter === f.id}
               onClick={() => changeFilter(f.id)}
-              className={`h-11 rounded-[4px] px-4 font-label-md text-[13px] text-primary transition-colors hover:bg-secondary ${
+              className={`px-4 font-label-md text-[13px] ${
                 filter === f.id
-                  ? "border-2 border-primary bg-secondary font-semibold"
-                  : "border border-outline bg-card font-medium"
+                  ? "border-2 bg-secondary font-semibold"
+                  : "border-outline bg-card font-medium"
               }`}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-4">
@@ -215,13 +214,9 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
                 {filtered.length.toLocaleString("fr-FR")}
               </p>
               {filtered.length > limit && (
-                <button
-                  type="button"
-                  onClick={() => setLimit((l) => l + PAGE)}
-                  className="h-11 rounded-[4px] border border-primary bg-transparent px-5 text-sm font-semibold text-primary hover:bg-secondary"
-                >
+                <Button type="button" variant="outline" onClick={() => setLimit((l) => l + PAGE)}>
                   Afficher plus
-                </button>
+                </Button>
               )}
             </div>
           ) : undefined
@@ -234,24 +229,16 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
               error
             </span>
             <p className="text-base">Les demandes sont indisponibles.</p>
-            <button
-              type="button"
-              onClick={() => void list.refetch()}
-              className="h-11 rounded-[4px] border border-primary px-4 text-sm font-semibold text-primary hover:bg-secondary"
-            >
+            <Button type="button" variant="outline" onClick={() => void list.refetch()}>
               Réessayer
-            </button>
+            </Button>
           </div>
         )}
         {list.data && all.length === 0 && (
           <EmptyState
             message="Aucune demande pour le moment."
             action={
-              <SubmitIdeaAction
-                role={role}
-                email={email}
-                className="h-11 rounded-[4px] bg-primary px-5 text-sm font-semibold text-on-primary hover:bg-[#4F5252]"
-              >
+              <SubmitIdeaAction role={role} email={email}>
                 Faire une demande
               </SubmitIdeaAction>
             }
@@ -283,15 +270,17 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
                     </p>
                   )}
                   <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
-                  <button
+                  <Button
                     type="button"
+                    variant="link"
+                    size="sm"
                     aria-haspopup="dialog"
                     aria-label={`Voir le détail : demande de ${s.author_name}`}
                     onClick={() => setReading(s)}
-                    className="-ml-3 inline-flex h-11 items-center rounded-[4px] px-3 text-sm font-semibold text-primary underline hover:bg-secondary"
+                    className="-ml-3"
                   >
                     Voir le détail
-                  </button>
+                  </Button>
                 </div>
                 <div className="w-[120px] shrink-0 pt-0.5">
                   <StatusTag status={s.status} />
@@ -300,21 +289,22 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
                   <div className="flex w-[176px] shrink-0 items-center justify-end gap-2 pt-0.5">
                     {canModerate(s) && (
                       <>
-                        <button
+                        <Button
                           type="button"
+                          variant="outline"
                           onClick={() => startReject(s)}
-                          className="h-11 rounded-[4px] border border-primary bg-transparent px-3.5 text-sm font-semibold text-primary hover:bg-secondary"
+                          className="px-3.5"
                         >
                           Refuser
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
                           disabled={review.isPending}
                           onClick={() => review.mutate({ id: s.id, status: "validée" })}
-                          className="h-11 rounded-[4px] bg-primary px-3.5 text-sm font-semibold text-on-primary hover:bg-[#4F5252] disabled:opacity-50"
+                          className="px-3.5"
                         >
                           Valider
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>

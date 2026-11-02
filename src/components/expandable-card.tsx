@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Linkify } from "@/components/linkify";
+import { Button } from "@/components/ui/button";
 
 const REJECTION_NOTE_DB_MSG = "La raison du refus ne doit pas dépasser 500 caractères.";
 
@@ -8,7 +9,7 @@ export function rejectionErrorMessage(e: unknown): string {
   const msg = (e as Error)?.message ?? String(e);
   if (msg.includes("submissions_rejection_note_max_500")) return REJECTION_NOTE_DB_MSG;
   if (msg.includes("submissions_content_length_check"))
-    return "La proposition doit faire entre 5 et 2 000 caractères.";
+    return "La demande doit faire entre 5 et 2 000 caractères.";
   return msg;
 }
 
@@ -64,14 +65,16 @@ export function SubmissionPreview({ content, onOpen }: { content: string; onOpen
         “<Linkify text={content} />”
       </p>
       {overflows && (
-        <button
+        <Button
           type="button"
+          variant="link"
+          size="sm"
           aria-haspopup="dialog"
           onClick={onOpen}
-          className="font-label-sm text-label-sm text-primary font-bold underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="-ml-3"
         >
           Voir plus
-        </button>
+        </Button>
       )}
     </div>
   );

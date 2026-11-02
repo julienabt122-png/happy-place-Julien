@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/")({
       {
         name: "description",
         content:
-          "Pilotez les missions de recrutement IT et digital, les propositions des équipes, les alertes opérationnelles et les indicateurs du cabinet.",
+          "Pilotez les missions de recrutement IT et digital, les demandes des équipes, les alertes opérationnelles et les indicateurs du cabinet.",
       },
       { property: "og:title", content: "Happy Place — Vue d'ensemble" },
       {

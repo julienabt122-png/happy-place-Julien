@@ -5,6 +5,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BulkImport } from "@/components/manage/bulk-import";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { countAttachmentDeletionQueue, processAttachmentDeletionQueue } from "@/lib/dashboard";
 
@@ -242,14 +243,9 @@ function UsersPage() {
       {(queue.data ?? 0) > 0 && (
         <div className="flex items-center justify-between gap-sm border border-error bg-surface-container-lowest p-sm">
           <p className="text-body-sm text-error">{queue.data} document(s) en attente de suppression</p>
-          <button
-            type="button"
-            onClick={() => retry.mutate()}
-            disabled={retry.isPending}
-            className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container disabled:opacity-50"
-          >
+          <Button type="button" variant="outline" onClick={() => retry.mutate()} disabled={retry.isPending}>
             {retry.isPending ? "…" : "Réessayer"}
-          </button>
+          </Button>
         </div>
       )}
       <TeamsSection users={list.data ?? []} teams={teamsQuery.data ?? []} onChanged={refresh} />
@@ -302,9 +298,9 @@ function UsersPage() {
             {selectableTeams.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         )}
-        <button disabled={add.isPending} className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md">
-          AJOUTER
-        </button>
+        <Button type="submit" disabled={add.isPending}>
+          Ajouter
+        </Button>
       </form>
 
       <div className="border border-outline-variant divide-y divide-outline-variant bg-surface-container-lowest">
@@ -336,14 +332,15 @@ function UsersPage() {
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
               </select>
-              <button
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => scheduleRemoval(u)}
                 disabled={u.email === me || setDeparture.isPending}
                 title={u.email === me ? "Tu ne peux pas programmer ton propre départ" : undefined}
-                className="px-sm py-xs border border-outline text-error font-label-md text-label-md disabled:opacity-50"
               >
-                RETIRER (J+7)
-              </button>
+                Retirer (J+7)
+              </Button>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-xs border-t border-outline-variant pt-sm">
@@ -358,26 +355,27 @@ function UsersPage() {
                 onChange={(e) => setDepartureInputs((c) => ({ ...c, [u.id]: e.target.value }))}
                 className="border border-outline-variant bg-surface px-sm py-1 font-body-md"
               />
-              <button
+              <Button
                 type="button"
+                size="sm"
                 disabled={setDeparture.isPending || !(departureInputs[u.id] ?? u.departure_date)}
                 onClick={() => setDeparture.mutate({ id: u.id, date: departureInputs[u.id] ?? u.departure_date ?? null })}
-                className="bg-primary text-on-primary px-sm py-1 font-label-sm text-label-sm disabled:opacity-50"
               >
                 Enregistrer
-              </button>
+              </Button>
               {u.departure_date && (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   disabled={setDeparture.isPending}
                   onClick={() => {
                     setDepartureInputs((c) => ({ ...c, [u.id]: "" }));
                     setDeparture.mutate({ id: u.id, date: null });
                   }}
-                  className="px-sm py-1 border border-outline text-primary font-label-sm text-label-sm"
                 >
                   Annuler le départ
-                </button>
+                </Button>
               )}
             </div>
             {u.role === "collaborateur" && (
@@ -396,8 +394,9 @@ function UsersPage() {
                   const chosen = memberTeams[u.id] ?? u.team ?? "";
                   const saving = update.isPending && update.variables?.id === u.id;
                   return (
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
                       disabled={!chosen || chosen === u.team || saving}
                       onClick={() =>
                         update.mutate(
@@ -410,10 +409,9 @@ function UsersPage() {
                           },
                         )
                       }
-                      className="bg-primary text-on-primary px-sm py-1 font-label-sm text-label-sm disabled:opacity-50"
                     >
-                      {saving ? "…" : "ENREGISTRER"}
-                    </button>
+                      {saving ? "…" : "Enregistrer"}
+                    </Button>
                   );
                 })()}
                 {!u.team && <span className="text-error text-sm">Aucune équipe définie</span>}
@@ -423,15 +421,16 @@ function UsersPage() {
               <div className="flex flex-wrap items-center gap-xs border-t border-outline-variant pt-sm">
                 <span className="font-label-sm text-label-sm text-on-surface-variant">ÉQUIPES :</span>
                 {u.teams.map((team) => (
-                  <button
+                  <Button
                     key={team}
                     type="button"
+                    variant="outline"
+                    size="sm"
                     title={`Retirer l'équipe ${team}`}
                     onClick={() => removeTeam.mutate({ allowedUserId: u.id, team })}
-                    className="border border-outline-variant bg-surface px-xs py-1 font-label-sm text-label-sm"
                   >
                     {team} ×
-                  </button>
+                  </Button>
                 ))}
 <select
             value={teamInputs[u.id] ?? ""}
@@ -442,14 +441,14 @@ function UsersPage() {
             <option value="">Choisir une équipe</option>
             {selectableTeams.filter((t) => !u.teams.includes(t)).map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
-                <button
+                <Button
                   type="button"
+                  size="sm"
                   disabled={!teamInputs[u.id] || addTeam.isPending}
                   onClick={() => addTeam.mutate({ allowedUserId: u.id, team: teamInputs[u.id] ?? "" })}
-                  className="bg-primary text-on-primary px-sm py-1 font-label-sm text-label-sm disabled:opacity-50"
                 >
-                  {addTeam.isPending && addTeam.variables?.allowedUserId === u.id ? "…" : "AJOUTER"}
-                </button>
+                  {addTeam.isPending && addTeam.variables?.allowedUserId === u.id ? "…" : "Ajouter"}
+                </Button>
               </div>
             )}
           </div>
@@ -471,8 +470,8 @@ function UsersPage() {
             {selectableTeams.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
           <DialogFooter>
-            <button type="button" onClick={() => setRoleDialog(null)} className="px-md py-xs border border-outline text-primary font-label-md text-label-md">Annuler</button>
-            <button
+            <Button type="button" variant="outline" onClick={() => setRoleDialog(null)}>Annuler</Button>
+            <Button
               type="button"
               disabled={!roleDialog?.team || update.isPending}
               title={!roleDialog?.team ? "Choisis d'abord une équipe" : undefined}
@@ -483,10 +482,9 @@ function UsersPage() {
                   { onSuccess: () => { toast.success("Rôle modifié"); setRoleDialog(null); } },
                 );
               }}
-              className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50"
             >
               {update.isPending ? "…" : "Enregistrer"}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -535,8 +533,6 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
     setErr(null);
     create.mutate(p.data);
   }
-  const btn = "px-sm py-1 border border-outline text-primary font-label-sm text-label-sm disabled:opacity-50";
-
   return (
     <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md">
       <h2 className="font-label-md text-label-md text-primary">Équipes</h2>
@@ -552,7 +548,7 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
           />
           {err && <p className="text-error text-sm mt-1">{err}</p>}
         </div>
-        <button disabled={create.isPending} className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md">AJOUTER</button>
+        <Button type="submit" disabled={create.isPending}>Ajouter</Button>
       </form>
       <ul className="divide-y divide-outline-variant border border-outline-variant">
         {teams.map((t) => (
@@ -566,9 +562,9 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
                   maxLength={60}
                   className="border border-outline-variant bg-surface px-sm py-1 font-body-md"
                 />
-                <button
+                <Button
                   type="button"
-                  className="bg-primary text-on-primary px-sm py-1 font-label-sm text-label-sm"
+                  size="sm"
                   disabled={rename.isPending}
                   onClick={() => {
                     const p = teamSchema.safeParse(editing.to);
@@ -577,8 +573,8 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
                   }}
                 >
                   Enregistrer
-                </button>
-                <button type="button" className={btn} onClick={() => setEditing(null)}>Annuler</button>
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setEditing(null)}>Annuler</Button>
               </span>
             ) : (
               <span className="font-body-md text-primary">
@@ -588,15 +584,16 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
             )}
             {!t.is_reserved && editing?.from !== t.name && (
               <span className="flex gap-xs">
-                <button type="button" className={btn} onClick={() => setEditing({ from: t.name, to: t.name })}>Renommer</button>
-                <button
+                <Button type="button" variant="outline" size="sm" onClick={() => setEditing({ from: t.name, to: t.name })}>Renommer</Button>
+                <Button
                   type="button"
-                  className={`${btn} text-error`}
+                  variant="outline"
+                  size="sm"
                   disabled={del.isPending}
                   onClick={() => confirm(`Supprimer l'équipe « ${t.name} » ?`) && del.mutate(t.name)}
                 >
                   Supprimer
-                </button>
+                </Button>
               </span>
             )}
           </li>

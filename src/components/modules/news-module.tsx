@@ -2,11 +2,14 @@ import type { User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ClickableRow, RowMainButton } from "@/components/clickable-row";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
+import { ConfirmDialog } from "@/components/modules/confirm-dialog";
 import { NewsImage, NewsLinks, NewsMediaEditor } from "@/components/news-media";
 import { NewsReader } from "@/components/news-reader";
 import { usePublishDraft } from "@/components/modules/use-publish-draft";
+import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { deleteDraftNews, fetchNews, saveDraftNews, timeAgo, type News } from "@/lib/dashboard";
 import {
@@ -47,6 +50,7 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
   const [showLinkErrs, setShowLinkErrs] = useState(false);
   const newsLinkErrs = showLinkErrs ? linkErrors(media.links) : {};
   const [readingNews, setReadingNews] = useState<News | null>(null);
+  const [draftToDelete, setDraftToDelete] = useState<News | null>(null);
 
   const news = useQuery({ queryKey: ["news"], queryFn: fetchNews, retry: false });
   const onError = (e: unknown) => toast.error((e as Error).message);
@@ -75,6 +79,7 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
       qc.invalidateQueries({ queryKey: ["news"] });
     },
     onError,
+    onSettled: () => setDraftToDelete(null),
   });
 
   const visibleDrafts = news.data?.filter((n) => n.status === "brouillon") ?? [];
@@ -159,9 +164,9 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                 />
                 <div className="flex items-center gap-sm">
                   {editingNewsId && (
-                    <button
+                    <Button
                       type="button"
-                      className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary"
+                      variant="outline"
                       onClick={() => {
                         setEditingNewsId(null);
                         setTitle("");
@@ -171,15 +176,11 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                       }}
                     >
                       Annuler
-                    </button>
+                    </Button>
                   )}
-                  <button
-                    type="submit"
-                    disabled={saveDraft.isPending}
-                    className="px-lg py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50"
-                  >
+                  <Button type="submit" disabled={saveDraft.isPending}>
                     {saveDraft.isPending ? "Enregistrement…" : "Enregistrer le brouillon"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </form>
@@ -215,9 +216,10 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                         </div>
                         {allowed && (
                           <div className="flex items-center gap-sm shrink-0">
-                            <button
+                            <Button
                               type="button"
-                              className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary"
+                              variant="outline"
+                              size="sm"
                               onClick={() => {
                                 setEditingNewsId(n.id);
                                 setTitle(n.title);
@@ -227,26 +229,24 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                               }}
                             >
                               Modifier
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               type="button"
-                              className="font-label-sm text-label-sm text-error"
+                              variant="outline"
+                              size="sm"
                               disabled={removeDraft.isPending}
-                              onClick={() => {
-                                if (window.confirm(`Supprimer le brouillon « ${n.title} » ?`))
-                                  removeDraft.mutate(n);
-                              }}
+                              onClick={() => setDraftToDelete(n)}
                             >
                               Supprimer
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               type="button"
-                              className="px-sm py-1 bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
+                              size="sm"
                               disabled={publishDraft.pending}
                               onClick={() => publishDraft.publish(n)}
                             >
                               Publier
-                            </button>
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -267,36 +267,49 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                 <EmptyState message="Aucune actualité publiée pour le moment." />
               )}
               {published.map((n) => (
-                <button
-                  type="button"
+                <ClickableRow
                   key={n.id}
-                  onClick={() => setReadingNews(n)}
-                  aria-haspopup="dialog"
-                  className="w-full text-left p-sm bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer group min-w-0 overflow-hidden space-y-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="min-w-0 overflow-hidden bg-surface-container p-sm"
                 >
-                  {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}
-                  <div className="flex items-center justify-between gap-sm min-w-0">
-                    <div className="flex items-center gap-md min-w-0">
-                      <Icon name="article" className="text-on-surface-variant" />
-                      <div className="min-w-0">
-                        <p className="font-body-md text-primary group-hover:underline wrap-anywhere">
-                          {n.title}
-                        </p>
-                        <p className="text-xs text-on-surface-variant uppercase font-label-sm">
-                          Publiée {timeAgo(n.created_at)} • Par {n.author}
-                        </p>
-                      </div>
-                    </div>
-                    {isAdmin && <Icon name="edit" className="text-on-surface-variant" />}
-                  </div>
+                  <RowMainButton
+                    label={n.title}
+                    onOpen={() => setReadingNews(n)}
+                    className="block w-full min-w-0 space-y-xs"
+                  >
+                    {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}
+                    <span className="flex min-w-0 items-center justify-between gap-sm">
+                      <span className="flex min-w-0 items-center gap-md">
+                        <Icon name="article" className="text-on-surface-variant" />
+                        <span className="min-w-0">
+                          <span className="block font-body-md text-primary wrap-anywhere">
+                            {n.title}
+                          </span>
+                          <span className="block text-xs text-on-surface-variant font-label-sm">
+                            Publiée {timeAgo(n.created_at)} • Par {n.author}
+                          </span>
+                        </span>
+                      </span>
+                      {isAdmin && <Icon name="edit" className="text-on-surface-variant" />}
+                    </span>
+                  </RowMainButton>
                   <NewsLinks links={n.links} />
-                </button>
+                </ClickableRow>
               ))}
             </div>
           </div>
         </div>
       </ModuleCard>
       <NewsReader news={readingNews} onClose={() => setReadingNews(null)} />
+      {publishDraft.confirmDialog}
+      <ConfirmDialog
+        open={!!draftToDelete}
+        onOpenChange={(o) => !o && setDraftToDelete(null)}
+        title="Supprimer le brouillon"
+        message={draftToDelete ? `Supprimer le brouillon « ${draftToDelete.title} » ?` : ""}
+        confirmLabel="Supprimer le brouillon"
+        pending={removeDraft.isPending}
+        onConfirm={() => draftToDelete && removeDraft.mutate(draftToDelete)}
+      />
     </div>
   );
 }

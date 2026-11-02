@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   downloadAttachment,
   downloadDepartureZip,
@@ -60,8 +61,6 @@ function NoticeBanner({ notice: n, email }: { notice: DepartureNotice; email: st
     }
   }
 
-  const btn = "px-sm py-1 border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container disabled:opacity-50";
-
   return (
     <div
       role={reminder ? "alert" : "status"}
@@ -74,17 +73,17 @@ function NoticeBanner({ notice: n, email }: { notice: DepartureNotice; email: st
       <div className="flex flex-wrap gap-xs">
         {count > 0 && (
           <>
-            <button type="button" className={btn} onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+            <Button type="button" variant="outline" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
               {open ? "Masquer les documents" : "Voir les documents"}
-            </button>
-            <button type="button" className={btn} onClick={zipAll} disabled={zipping}>
+            </Button>
+            <Button type="button" variant="outline" onClick={zipAll} disabled={zipping}>
               {zipping ? "Préparation…" : "Tout télécharger (.zip)"}
-            </button>
+            </Button>
           </>
         )}
-        <button type="button" className={btn} onClick={() => mark.mutate()} disabled={mark.isPending}>
+        <Button type="button" variant="outline" onClick={() => mark.mutate()} disabled={mark.isPending}>
           {count > 0 ? "J'ai téléchargé les documents" : "J'ai pris note"}
-        </button>
+        </Button>
       </div>
       {open && (
         <ul className="border-t border-outline-variant pt-xs space-y-xs">
@@ -93,13 +92,14 @@ function NoticeBanner({ notice: n, email }: { notice: DepartureNotice; email: st
               <span>
                 <span className="font-bold">{frDate(d.created_at)}</span> — {d.excerpt}
               </span>
-              <button
+              <Button
                 type="button"
-                className="text-primary underline font-label-sm text-label-sm"
+                variant="link"
+                size="sm"
                 onClick={() => downloadAttachment(d.path, d.name).catch((e) => toast.error((e as Error).message))}
               >
                 Télécharger
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

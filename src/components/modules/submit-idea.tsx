@@ -5,22 +5,23 @@ import { ErrorSummary, Field, FormActions, TextArea, TextInput } from "@/compone
 import { CharCounter, rejectionErrorMessage } from "@/components/expandable-card";
 import { FormDialog } from "@/components/modules/form-dialog";
 import { useMyTeams } from "@/components/modules/submission-actions";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { submitIdea, type SubmissionInput } from "@/lib/dashboard";
 import { submissionSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
 
 /**
- * Bouton « Soumettre une idée » et sa fenêtre (Dialog shadcn). Un seul exemplaire,
+ * Bouton « Faire une demande » et sa fenêtre (Dialog shadcn). Un seul exemplaire,
  * utilisé par l'accueil et par /demandes. `children` est le contenu du bouton.
  */
 export function SubmitIdeaAction({
   role,
   email,
-  className,
+  variant = "default",
   children,
 }: {
   role: string;
   email: string;
-  className: string;
+  variant?: ButtonProps["variant"];
   children: ReactNode;
 }) {
   const qc = useQueryClient();
@@ -43,7 +44,7 @@ export function SubmitIdeaAction({
       setSubmissionForm(null);
       setAttachment(null);
       setSubmissionErrors({});
-      toast.success("Soumission envoyée");
+      toast.success("Demande envoyée");
       qc.invalidateQueries({ queryKey: ["submissions"] });
     },
     onError: (e: unknown) => toast.error(rejectionErrorMessage(e)),
@@ -75,12 +76,12 @@ export function SubmitIdeaAction({
     <FormDialog
       open={!!submissionForm}
       onOpenChange={(o) => (o ? openForm() : setSubmissionForm(null))}
-      title="Soumettre une proposition"
-      description="Décris l'amélioration proposée pour le cabinet."
+      title="Faire une demande"
+      description="Décris ta demande."
       trigger={
-        <button type="button" className={className}>
+        <Button type="button" variant={variant}>
           {children}
-        </button>
+        </Button>
       }
     >
       {submissionForm && (
@@ -116,11 +117,11 @@ export function SubmitIdeaAction({
           {role === "admin" && (
             <p className="text-body-sm text-on-surface-variant">Équipe : Admin</p>
           )}
-          <Field label="Proposition" error={submissionErrors.content}>
+          <Field label="Demande" error={submissionErrors.content}>
             <TextArea
               rows={5}
               value={submissionForm.content}
-              placeholder="Décris l'amélioration proposée pour le cabinet…"
+              placeholder="Décris ta demande…"
               onChange={(e) => setSubmissionForm({ ...submissionForm, content: e.target.value })}
             />
             <CharCounter value={submissionForm.content} max={2000} min={5} />
@@ -158,7 +159,7 @@ export function SubmitIdeaAction({
           </Field>
           <FormActions
             pending={submit.isPending}
-            submitLabel="ENVOYER"
+            submitLabel="Envoyer la demande"
             onCancel={() => setSubmissionForm(null)}
           />
         </form>

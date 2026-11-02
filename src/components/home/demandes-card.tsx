@@ -11,17 +11,13 @@ import {
 import { SubmitIdeaAction } from "@/components/modules/submit-idea";
 import { InfoTag, STATUS_LABELS, StatusTag } from "@/components/status-tag";
 import { SubmissionReader } from "@/components/submission-reader";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AppRole } from "@/lib/auth";
 import { timeAgo, type Submission } from "@/lib/dashboard";
 
 /** Nombre de lignes montrées dans chaque onglet : « Voir tout » mène à /demandes. */
 const PREVIEW = 3;
-
-const BTN_PRIMARY =
-  "flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-[4px] bg-primary px-4 text-sm font-medium text-on-primary transition-colors hover:bg-[#4F5252]";
-const BTN_SECONDARY =
-  "flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-[4px] border border-primary bg-transparent px-4 text-sm font-semibold text-primary transition-colors hover:bg-hover-gris disabled:opacity-50";
 
 const TAB_TRIGGER =
   "-mb-px h-11 gap-2 rounded-none rounded-t-sm border-b-2 border-transparent bg-transparent px-0 py-0 text-sm font-medium text-on-surface-variant shadow-none hover:border-[#C4C7C7] hover:text-primary focus-visible:ring-0 focus-visible:ring-offset-0 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:shadow-none";
@@ -114,20 +110,20 @@ export function DemandesCard({
       seeAllLabel="Voir tout : demandes"
       footer={
         <div className="flex flex-wrap items-center gap-2">
-          <SubmitIdeaAction role={role} email={email} className={BTN_PRIMARY}>
+          <SubmitIdeaAction role={role} email={email}>
             <Icon name="add" className="text-[18px]" /> Faire une demande
           </SubmitIdeaAction>
-          <button
+          <Button
             type="button"
+            variant="outline"
             aria-label="Exporter mes demandes au format CSV"
             title="Exporter mes demandes au format CSV"
             disabled={exportReport.isPending}
             onClick={() => exportReport.mutate()}
-            className={BTN_SECONDARY}
           >
             <Icon name="download" className="text-[18px]" />
             {exportReport.isPending ? "Export en cours…" : "Exporter mes demandes"}
-          </button>
+          </Button>
         </div>
       }
     >
@@ -186,23 +182,24 @@ export function DemandesCard({
                   {s.content}
                 </p>
                 <div className="relative z-10 flex items-center justify-end gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     aria-label={`Refuser la demande de ${s.author_name}`}
                     onClick={() => startReject(s)}
-                    className="h-11 rounded-[4px] border border-primary px-4 text-sm text-foreground transition-colors hover:bg-hover-gris"
+                    className="px-4"
                   >
                     Refuser
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     aria-label={`Valider la demande de ${s.author_name}`}
                     disabled={review.isPending}
                     onClick={() => review.mutate({ id: s.id, status: "validée" })}
-                    className="h-11 rounded-[4px] bg-primary px-4 text-sm text-on-primary transition-colors hover:bg-[#4F5252] disabled:opacity-50"
+                    className="px-4"
                   >
                     Valider
-                  </button>
+                  </Button>
                 </div>
               </ClickableRow>
             ))}

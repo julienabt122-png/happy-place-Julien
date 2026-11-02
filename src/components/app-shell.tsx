@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { BrandHeader } from "@/components/brand-header";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,9 +107,10 @@ export function AppShell({
         <div className="flex shrink-0 items-center gap-4 pr-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
+              <Button
                 type="button"
-                className="flex h-11 items-center gap-2.5 rounded-[4px] border border-outline-variant bg-card px-3 hover:bg-hover-gris"
+                variant="outline"
+                className="gap-2.5 border-outline-variant bg-card px-3 hover:bg-hover-gris"
               >
                 <Icon name="person" />
                 <span className="font-body-md text-sm font-medium text-foreground">{email}</span>
@@ -116,7 +118,7 @@ export function AppShell({
                   {ROLE_LABELS[role]}
                 </span>
                 <Icon name="expand_more" className="text-base text-on-surface-variant" />
-              </button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
@@ -140,15 +142,17 @@ export function AppShell({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             aria-label="Aide"
             aria-disabled="true"
             title="Aide (bientôt disponible)"
-            className="flex h-11 w-11 items-center justify-center rounded-[4px] border border-outline-variant bg-card hover:bg-hover-gris"
+            className="border-outline-variant bg-card hover:bg-hover-gris"
           >
             <Icon name="help_outline" />
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -180,15 +184,16 @@ export function AppShell({
                 Gestion
               </Link>
             )}
-            <button
+            <Button
               type="button"
+              variant="ghost"
               aria-disabled="true"
               title="Aide (bientôt disponible)"
-              className={`${ENTRY_IDLE} w-full text-left`}
+              className={`${ENTRY_IDLE} w-full justify-start rounded-none`}
             >
               <Icon name="help_outline" className="text-primary" />
               Aide
-            </button>
+            </Button>
           </div>
         </aside>
 

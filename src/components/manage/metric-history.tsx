@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { fetchMetricHistory, formatMetricValue } from "@/lib/dashboard";
 
 const fmt = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" });
@@ -13,14 +14,16 @@ export function MetricHistory({ metricKey, unit }: { metricKey: string; unit: st
   });
   return (
     <div className="mt-xs">
-      <button
+      <Button
         type="button"
+        variant="link"
+        size="sm"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="text-[11px] font-label-sm uppercase text-on-surface-variant underline"
+        className="-ml-3"
       >
         {open ? "▾" : "▸"} Historique
-      </button>
+      </Button>
       {open && (
         <div className="mt-xs border-l border-outline-variant pl-sm space-y-xs">
           {q.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}

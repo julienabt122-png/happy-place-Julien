@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   ConfirmDelete,
   ErrorSummary,
+  ManageIcon,
   Field,
   FormActions,
   Modal,
@@ -13,6 +14,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/manage/crud-ui";
+import { Button } from "@/components/ui/button";
 import { AttachmentLink } from "@/components/attachment-link";
 import { CharCounter, rejectionErrorMessage } from "@/components/expandable-card";
 import { Linkify } from "@/components/linkify";
@@ -33,10 +35,10 @@ import {
 export const Route = createFileRoute("/_authenticated/manage/submissions")({
   head: () => ({
     meta: [
-      { title: "Gestion des soumissions — Happy Place" },
-      { name: "description", content: "Créez, modifiez et supprimez les soumissions dans Happy Place." },
-      { property: "og:title", content: "Gestion des soumissions — Happy Place" },
-      { property: "og:description", content: "Gérez les propositions des pôles du cabinet dans Happy Place." },
+      { title: "Gestion des demandes — Happy Place" },
+      { name: "description", content: "Créez, modifiez et supprimez les demandes dans Happy Place." },
+      { property: "og:title", content: "Gestion des demandes — Happy Place" },
+      { property: "og:description", content: "Gérez les demandes des pôles du cabinet dans Happy Place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -72,7 +74,7 @@ function ManageSubmissions() {
     mutationFn: (input: SubmissionInput) =>
       editing ? updateSubmission(editing.id, input) : createSubmission(input),
     onSuccess: () => {
-      toast.success(editing ? "Soumission modifiée" : "Soumission créée");
+      toast.success(editing ? "Demande modifiée" : "Demande créée");
       close();
       invalidate();
     },
@@ -82,7 +84,7 @@ function ManageSubmissions() {
   const remove = useMutation({
     mutationFn: (id: string) => deleteSubmission(id),
     onSuccess: () => {
-      toast.success("Soumission supprimée");
+      toast.success("Demande supprimée");
       setToDelete(null);
       invalidate();
     },
@@ -111,23 +113,23 @@ function ManageSubmissions() {
     <section className="space-y-md">
       <div className="flex items-center justify-between">
         <h2 className="font-headline-sm text-headline-sm text-primary">
-          Soumissions ({list.data?.length ?? 0})
+          Demandes ({list.data?.length ?? 0})
         </h2>
-        <button
+        <Button
+          type="button"
           onClick={() => {
             setEditing(null);
             setErrors({});
             setForm({ ...empty });
           }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
         >
-          + NOUVELLE SOUMISSION
-        </button>
+          <ManageIcon name="add" className="text-[18px]" /> Nouvelle demande
+        </Button>
       </div>
 
       {list.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}
       {list.isError && (
-        <p className="text-body-sm text-error">Impossible de charger les soumissions.</p>
+        <p className="text-body-sm text-error">Impossible de charger les demandes.</p>
       )}
 
       <div className="space-y-xs">
@@ -141,14 +143,16 @@ function ManageSubmissions() {
                 {s.author_name} — {s.team}
               </p>
               <p className="text-body-sm text-on-surface-variant italic line-clamp-3 whitespace-pre-line wrap-anywhere">“<Linkify text={s.content} />”</p>
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size="sm"
                 aria-haspopup="dialog"
                 onClick={() => setReading(s)}
-                className="font-label-sm text-label-sm text-primary underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="-ml-3"
               >
                 Ouvrir
-              </button>
+              </Button>
               <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
               <p className="text-[11px] font-label-sm text-on-surface-variant uppercase mt-xs">
                  {submissionStatusLabels[s.status] ?? s.status} • {timeAgo(s.created_at)}
@@ -178,7 +182,7 @@ function ManageSubmissions() {
           </article>
         ))}
         {list.data?.length === 0 && (
-          <p className="text-body-sm italic text-on-surface-variant">Aucune soumission.</p>
+          <p className="text-body-sm italic text-on-surface-variant">Aucune demande.</p>
         )}
       </div>
 
@@ -188,7 +192,7 @@ function ManageSubmissions() {
         onClose={() => setReading(null)}
       />
       {form && (
-        <Modal title={editing ? "Modifier la soumission" : "Nouvelle soumission"} onClose={close}>
+        <Modal title={editing ? "Modifier la demande" : "Nouvelle demande"} onClose={close}>
           <form onSubmit={submit} className="space-y-sm" noValidate>
             <ErrorSummary errors={errors} />
             <Field label="Auteur" error={errors.author_name}>

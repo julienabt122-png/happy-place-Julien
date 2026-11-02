@@ -2,10 +2,12 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Linkify } from "@/components/linkify";
 import { AttachmentLink } from "@/components/attachment-link";
 import { formatExactDate } from "@/components/expandable-card";
+import { STATUS_LABELS } from "@/components/status-tag";
+import { Button } from "@/components/ui/button";
 import type { Submission } from "@/lib/dashboard";
 import { useReturnFocus } from "@/lib/use-return-focus";
 
-/** Grande fenêtre de lecture d'une soumission (focus piégé, Échap, clic fond). */
+/** Grande fenêtre de lecture d'une demande (focus piégé, Échap, clic fond). */
 export function SubmissionReader({
   submission: s,
   statusLabel,
@@ -37,14 +39,13 @@ export function SubmissionReader({
                   {s.author_name}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="font-label-sm text-label-sm text-on-surface-variant">
-                  {s.team} • {(statusLabel ?? s.status).toUpperCase()} • Soumise le {formatExactDate(s.created_at)}
+                  {s.team} • {statusLabel ?? STATUS_LABELS[s.status] ?? s.status} • Soumise le {formatExactDate(s.created_at)}
                 </DialogPrimitive.Description>
               </div>
-              <DialogPrimitive.Close
-                aria-label="Fermer"
-                className="text-on-surface-variant hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <span aria-hidden="true" className="material-symbols-outlined">close</span>
+              <DialogPrimitive.Close asChild>
+                <Button type="button" variant="ghost" size="icon" aria-label="Fermer">
+                  <span aria-hidden="true" className="material-symbols-outlined">close</span>
+                </Button>
               </DialogPrimitive.Close>
             </div>
             <div className="flex-1 overflow-y-auto p-md space-y-md">
@@ -62,23 +63,14 @@ export function SubmissionReader({
             {(onReject || onApprove) && (
               <div className="flex gap-xs border-t border-outline-variant p-md">
                 {onReject && (
-                  <button
-                    type="button"
-                    onClick={onReject}
-                    className="flex-1 py-sm border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container transition-colors"
-                  >
-                    REFUSER
-                  </button>
+                  <Button type="button" variant="outline" onClick={onReject} className="flex-1">
+                    Refuser
+                  </Button>
                 )}
                 {onApprove && (
-                  <button
-                    type="button"
-                    disabled={approving}
-                    onClick={onApprove}
-                    className="flex-1 py-sm bg-primary text-on-primary font-label-sm text-label-sm hover:opacity-90 transition-colors disabled:opacity-60"
-                  >
-                    VALIDER
-                  </button>
+                  <Button type="button" disabled={approving} onClick={onApprove} className="flex-1">
+                    Valider
+                  </Button>
                 )}
               </div>
             )}

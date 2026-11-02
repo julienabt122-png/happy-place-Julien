@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   ConfirmDelete,
   ErrorSummary,
+  ManageIcon,
   Field,
   FormActions,
   Modal,
@@ -13,6 +14,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/manage/crud-ui";
+import { Button } from "@/components/ui/button";
 import { newsSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
 import {
   createNews,
@@ -109,7 +111,8 @@ function ManageNews() {
         <h2 className="font-headline-sm text-headline-sm text-primary">
           Actualités ({list.data?.length ?? 0})
         </h2>
-        <button
+        <Button
+          type="button"
           onClick={() => {
             setEditing(null);
             setErrors({});
@@ -117,10 +120,9 @@ function ManageNews() {
             setShowLinkErrs(false);
             setForm({ ...empty });
           }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
         >
-          + NOUVELLE ACTUALITÉ
-        </button>
+          <ManageIcon name="add" className="text-[18px]" /> Nouvelle actualité
+        </Button>
       </div>
 
       {list.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}

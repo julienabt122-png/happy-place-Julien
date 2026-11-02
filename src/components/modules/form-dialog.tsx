@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useReturnFocus } from "@/lib/use-return-focus";
 
 /**
  * Fenêtre de formulaire (spec-interface § 2) : Dialog shadcn, bandeau de 56 px, corps de 24 px.
@@ -33,6 +34,8 @@ export function FormDialog({
   returnFocusRef?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
+  // Sans déclencheur ni bouton d'origine fourni : on retient le bouton actif à l'ouverture.
+  const autoReturnFocus = useReturnFocus(open);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
@@ -44,7 +47,9 @@ export function FormDialog({
                 const opener = returnFocusRef.current;
                 (opener?.isConnected ? opener : document.getElementById("contenu"))?.focus();
               }
-            : undefined
+            : trigger
+              ? undefined
+              : autoReturnFocus
         }
         className="max-h-[90vh] w-[640px] max-w-[calc(100vw-2rem)] gap-0 overflow-y-auto p-0"
       >

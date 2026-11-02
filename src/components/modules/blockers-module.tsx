@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
+import { Button } from "@/components/ui/button";
 import { BlockerArchive } from "@/components/dashboard-extras";
 import type { AppRole } from "@/lib/auth";
 import { fetchBlockers, timeAgo, updateBlockerStatus } from "@/lib/dashboard";
@@ -38,14 +39,15 @@ export function BlockersModule({ role }: { role: AppRole }) {
         counter={blockers.data ? `${blockers.data.length} en cours` : undefined}
         counterTone="dark"
         headerAction={
-          <button
+          <Button
             type="button"
+            variant="link"
+            size="sm"
             aria-haspopup="dialog"
             onClick={() => setArchiveOpen(true)}
-            className="inline-flex h-11 items-center rounded-[4px] px-3 text-sm font-semibold text-primary underline hover:bg-hover-gris"
           >
             Voir l'archive
-          </button>
+          </Button>
         }
       >
         <div className="space-y-sm p-6">

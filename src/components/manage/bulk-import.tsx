@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { loadBrowserLib } from "@/lib/browser-lib";
 
@@ -164,16 +165,15 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
 
   function cancel() { setResult(null); setSent([]); setError(null); setInputKey((k) => k + 1); }
 
-  const btn = "px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container disabled:opacity-50";
   const validCount = result?.rows.filter((r) => r.status === "valide").length ?? 0;
 
   return (
     <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md">
       <h2 className="font-label-md text-label-md text-primary">Importer une liste</h2>
       <div className="flex flex-wrap items-center gap-sm">
-        <button type="button" className={btn} onClick={() => downloadTemplate().catch((e) => toast.error((e as Error).message))}>
+        <Button type="button" variant="outline" onClick={() => downloadTemplate().catch((e) => toast.error((e as Error).message))}>
           Télécharger le modèle (.xlsx)
-        </button>
+        </Button>
         <input
           key={inputKey}
           type="file"
@@ -195,12 +195,12 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
           </p>
           <div className="flex flex-wrap gap-sm">
             {result.dry_run && (
-              <button type="button" className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50" disabled={validCount === 0 || busy} onClick={confirmImport}>
+              <Button type="button" disabled={validCount === 0 || busy} onClick={confirmImport}>
                 Importer les {validCount} lignes valides
-              </button>
+              </Button>
             )}
-            <button type="button" className={btn} onClick={() => downloadReport(result.rows)}>Télécharger le rapport (CSV)</button>
-            <button type="button" className={btn} onClick={cancel}>Annuler</button>
+            <Button type="button" variant="outline" onClick={() => downloadReport(result.rows)}>Télécharger le rapport (CSV)</Button>
+            <Button type="button" variant="outline" onClick={cancel}>Annuler</Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-body-sm">

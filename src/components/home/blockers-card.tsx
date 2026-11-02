@@ -4,6 +4,7 @@ import { ClickableRow, RowChevron, RowMainButton } from "@/components/clickable-
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
 import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
+import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import type { Blocker } from "@/lib/dashboard";
 import { plural } from "@/lib/plural";
@@ -29,15 +30,14 @@ export function BlockersCard({
       seeAllLabel="Voir tout : points bloquants"
       footer={
         role === "admin" ? (
-          <Link
-            to="/manage/blockers"
-            className="flex h-11 w-fit items-center gap-2 whitespace-nowrap rounded-[4px] bg-primary px-4 text-sm font-medium text-on-primary transition-colors hover:bg-[#4F5252]"
-          >
-            <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-              add
-            </span>
-            Créer un point bloquant
-          </Link>
+          <Button asChild className="w-fit">
+            <Link to="/manage/blockers">
+              <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+                add
+              </span>
+              Créer un point bloquant
+            </Link>
+          </Button>
         ) : undefined
       }
     >

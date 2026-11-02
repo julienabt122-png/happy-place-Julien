@@ -8,6 +8,7 @@ import { usePublishDraft } from "@/components/modules/use-publish-draft";
 import { NewsReader } from "@/components/news-reader";
 import { NewsThumb } from "@/components/news-thumb";
 import { NewTag } from "@/components/status-tag";
+import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { timeAgo, type News } from "@/lib/dashboard";
 import { plural } from "@/lib/plural";
@@ -15,9 +16,6 @@ import { plural } from "@/lib/plural";
 /** Nombre d'actualités montrées : « Voir tout » mène à /actualites. */
 const PREVIEW = 3;
 const DAY = 24 * 60 * 60 * 1000;
-
-const BTN_PRIMARY =
-  "flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-[4px] bg-primary px-4 text-sm font-medium text-on-primary transition-colors hover:bg-[#4F5252]";
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   return (
@@ -65,9 +63,11 @@ export function NewsCard({
       footer={
         canReview ? (
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <Link to="/actualites" className={BTN_PRIMARY}>
-              <Icon name="edit_note" className="text-[18px]" /> Rédiger une actualité
-            </Link>
+            <Button asChild>
+              <Link to="/actualites">
+                <Icon name="edit_note" className="text-[18px]" /> Rédiger une actualité
+              </Link>
+            </Button>
             {role === "admin" && drafts.length > 0 && (
               <div className="flex flex-col items-end gap-0.5 text-right">
                 <Link
@@ -167,21 +167,23 @@ export function NewsCard({
                     </span>
                   </div>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   aria-label={`Publier : ${n.title}`}
                   disabled={publishDraft.pending}
                   onClick={() => publishDraft.publish(n)}
-                  className="relative z-10 h-11 shrink-0 rounded-[4px] border border-primary px-4 text-sm text-foreground transition-colors hover:bg-hover-gris disabled:opacity-50"
+                  className="relative z-10 shrink-0 px-4"
                 >
                   Publier
-                </button>
+                </Button>
               </ClickableRow>
             ))}
           </div>
         )}
       </div>
       <NewsReader news={reading} onClose={() => setReading(null)} />
+      {publishDraft.confirmDialog}
     </ModuleCard>
   );
 }

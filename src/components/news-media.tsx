@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   MAX_NEWS_LINKS,
   NEWS_IMAGE_TYPES,
@@ -94,15 +95,16 @@ export function NewsMediaEditor({
             showExisting && <NewsImage path={value.existingPath!} alt={title || "Image de l'actualité"} className="max-w-xs max-h-40" />
           )}
           <div className="flex gap-sm">
-            <button type="button" disabled={disabled} onClick={pick} className="font-label-sm text-label-sm text-primary underline disabled:opacity-50">Remplacer</button>
-            <button
+            <Button type="button" variant="link" size="sm" disabled={disabled} onClick={pick}>Remplacer</Button>
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               disabled={disabled}
               onClick={() => onChange({ ...value, file: null, removeExisting: !!value.existingPath })}
-              className="font-label-sm text-label-sm text-error underline disabled:opacity-50"
             >
               Retirer
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -130,15 +132,16 @@ export function NewsMediaEditor({
                 onChange={(e) => onChange({ ...value, links: value.links.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })}
                 className="min-w-0 flex-1 bg-card border border-outline-variant p-xs font-body-sm focus:outline-none focus:border-primary"
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 aria-label={`Retirer le lien ${i + 1}`}
                 disabled={disabled}
                 onClick={() => onChange({ ...value, links: value.links.filter((_, j) => j !== i) })}
-                className="text-on-surface-variant hover:text-error"
               >
                 <I name="close" />
-              </button>
+              </Button>
             </div>
           </div>
           {linkErrs[i] && <p role="alert" className="text-body-sm text-error">{linkErrs[i]}</p>}
@@ -146,23 +149,18 @@ export function NewsMediaEditor({
       ))}
 
       <div className="flex flex-wrap gap-sm items-center">
-        <button
+        <Button type="button" variant="outline" disabled={disabled} onClick={pick}>
+          <I name="image" /> {hasImage ? "Changer le média" : "Ajouter un média"}
+        </Button>
+        <Button
           type="button"
-          disabled={disabled}
-          onClick={pick}
-          className="text-on-surface-variant flex items-center gap-xs hover:text-primary transition-colors disabled:opacity-50"
-        >
-          <I name="image" /> <span className="font-label-sm text-label-sm">{hasImage ? "CHANGER LE MÉDIA" : "AJOUTER UN MÉDIA"}</span>
-        </button>
-        <button
-          type="button"
+          variant="outline"
           disabled={disabled || full}
           title={full ? "3 liens maximum" : undefined}
           onClick={() => onChange({ ...value, links: [...value.links, { url: "", label: "" }] })}
-          className="text-on-surface-variant flex items-center gap-xs hover:text-primary transition-colors disabled:opacity-50 disabled:hover:text-on-surface-variant"
         >
-          <I name="link" /> <span className="font-label-sm text-label-sm">AJOUTER UN LIEN</span>
-        </button>
+          <I name="link" /> Ajouter un lien
+        </Button>
         {full && <span className="font-label-sm text-label-sm text-on-surface-variant">3 liens maximum</span>}
       </div>
     </div>

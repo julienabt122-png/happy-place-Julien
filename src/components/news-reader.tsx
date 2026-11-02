@@ -2,6 +2,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Linkify } from "@/components/linkify";
 import { formatExactDate } from "@/components/expandable-card";
 import { NewsImage, NewsLinks } from "@/components/news-media";
+import { Button } from "@/components/ui/button";
 import type { News } from "@/lib/dashboard";
 import { useReturnFocus } from "@/lib/use-return-focus";
 
@@ -26,11 +27,10 @@ export function NewsReader({ news: n, onClose }: { news: News | null; onClose: (
                   Publiée le {formatExactDate(n.created_at)} • Par {n.author}
                 </DialogPrimitive.Description>
               </div>
-              <DialogPrimitive.Close
-                aria-label="Fermer"
-                className="text-on-surface-variant hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <span aria-hidden="true" className="material-symbols-outlined">close</span>
+              <DialogPrimitive.Close asChild>
+                <Button type="button" variant="ghost" size="icon" aria-label="Fermer">
+                  <span aria-hidden="true" className="material-symbols-outlined">close</span>
+                </Button>
               </DialogPrimitive.Close>
             </div>
             <div className="flex-1 overflow-y-auto p-md space-y-md">
