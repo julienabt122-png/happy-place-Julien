@@ -7,6 +7,7 @@ import { FilterBar, FilterChips, FilterSelect, SearchField } from "@/components/
 import { Linkify } from "@/components/linkify";
 import { ModuleCard } from "@/components/module-card";
 import { PageHeader, SummaryLink } from "@/components/page-header";
+import { useDeleteSubmission } from "@/components/modules/use-delete-submission";
 import { SubmitIdeaAction } from "@/components/modules/submit-idea";
 import {
   canModerateSubmission,
@@ -47,6 +48,7 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
     retry: false,
   });
   const exportReport = useExportReport(email);
+  const deleteSubmissionAction = useDeleteSubmission();
   const { review, startReject, rejectDialog } = useSubmissionReview({
     onApproved: (id) => setReading((r) => (r?.id === id ? null : r)),
   });
@@ -250,7 +252,7 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
                   <StatusTag status={s.status} />
                 </div>
                 {canReview && (
-                  <div className="flex w-[176px] shrink-0 items-center justify-end gap-2 pt-0.5">
+                  <div className="flex w-[176px] shrink-0 flex-wrap items-center justify-end gap-2 pt-0.5">
                     {canModerate(s) && (
                       <>
                         <Button
@@ -270,6 +272,22 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
                           Valider
                         </Button>
                       </>
+                    )}
+                    {isAdmin && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        aria-haspopup="dialog"
+                        aria-label={`Supprimer la demande de ${s.author_name}`}
+                        disabled={deleteSubmissionAction.pending}
+                        onClick={(e) => deleteSubmissionAction.request(s, e.currentTarget)}
+                        className="px-3.5"
+                      >
+                        <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+                          delete
+                        </span>{" "}
+                        Supprimer
+                      </Button>
                     )}
                   </div>
                 )}
@@ -299,6 +317,7 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
         approving={review.isPending}
       />
       {rejectDialog}
+      {deleteSubmissionAction.confirmDialog}
     </div>
   );
 }

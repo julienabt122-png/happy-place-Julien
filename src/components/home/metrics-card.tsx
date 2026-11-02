@@ -115,6 +115,11 @@ export function MetricsCard({
         {metrics.isError && (
           <p className="mb-3 text-body-sm text-error">Les indicateurs sont indisponibles.</p>
         )}
+        {metrics.data && keys.length === 0 && (
+          <p className="text-sm text-on-surface-variant">
+            Aucun indicateur à afficher pour le moment.
+          </p>
+        )}
         <div className={`grid gap-6 ${GRID_BY_COUNT[keys.length] ?? GRID_BY_COUNT[2]}`}>
           {keys.map((key) => {
             const m = metricOf(metrics.data, key);

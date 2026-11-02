@@ -5,6 +5,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
 import { PageHeader } from "@/components/page-header";
 import { MetricFormDialog } from "@/components/modules/metric-form-dialog";
+import { useDeleteMetric } from "@/components/modules/use-delete-metric";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { fetchMetrics, formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
@@ -35,6 +36,7 @@ export function MetricsModule({ role }: { role: AppRole }) {
   const isAdmin = role === "admin";
   const [editing, setEditing] = useState<Metric | null>(null);
   const [limit, setLimit] = useState(LIST_PAGE_SIZE);
+  const deleteMetricAction = useDeleteMetric();
   const metrics = useQuery({ queryKey: ["metrics"], queryFn: fetchMetrics, retry: false });
   const all = metrics.data ?? [];
   const shown = all.slice(0, limit);
@@ -134,7 +136,7 @@ export function MetricsModule({ role }: { role: AppRole }) {
                   </Td>
                   {isAdmin && (
                     <Td className="text-right">
-                      <div className="flex items-center justify-end">
+                      <div className="flex items-center justify-end gap-2">
                         <Button
                           type="button"
                           variant="outline"
@@ -143,6 +145,17 @@ export function MetricsModule({ role }: { role: AppRole }) {
                           className="px-3.5"
                         >
                           <Icon name="edit" className="text-[18px]" /> Modifier
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          aria-haspopup="dialog"
+                          aria-label={`Supprimer l'indicateur ${label}`}
+                          disabled={deleteMetricAction.pending}
+                          onClick={(e) => deleteMetricAction.request(m, e.currentTarget)}
+                          className="px-3.5"
+                        >
+                          <Icon name="delete" className="text-[18px]" /> Supprimer
                         </Button>
                       </div>
                     </Td>
@@ -154,6 +167,7 @@ export function MetricsModule({ role }: { role: AppRole }) {
         )}
       </ModuleCard>
 
+      {deleteMetricAction.confirmDialog}
       {editing && (
         <MetricFormDialog metric={editing} open onOpenChange={(o) => !o && setEditing(null)} />
       )}
