@@ -3,15 +3,18 @@ import { Linkify } from "@/components/linkify";
 import { formatExactDate } from "@/components/expandable-card";
 import { NewsImage, NewsLinks } from "@/components/news-media";
 import type { News } from "@/lib/dashboard";
+import { useReturnFocus } from "@/lib/use-return-focus";
 
 /** Fenêtre de lecture d'une actualité publiée (lecture seule, Échap, clic fond). */
 export function NewsReader({ news: n, onClose }: { news: News | null; onClose: () => void }) {
+  const returnFocus = useReturnFocus(!!n);
   return (
     <DialogPrimitive.Root open={!!n} onOpenChange={(o) => !o && onClose()}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         {n && (
           <DialogPrimitive.Content
+            onCloseAutoFocus={returnFocus}
             className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none"
           >
             <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">

@@ -3,6 +3,7 @@ import { Linkify } from "@/components/linkify";
 import { AttachmentLink } from "@/components/attachment-link";
 import { formatExactDate } from "@/components/expandable-card";
 import type { Submission } from "@/lib/dashboard";
+import { useReturnFocus } from "@/lib/use-return-focus";
 
 /** Grande fenêtre de lecture d'une soumission (focus piégé, Échap, clic fond). */
 export function SubmissionReader({
@@ -20,12 +21,14 @@ export function SubmissionReader({
   onApprove?: () => void;
   approving?: boolean;
 }) {
+  const returnFocus = useReturnFocus(!!s);
   return (
     <DialogPrimitive.Root open={!!s} onOpenChange={(o) => !o && onClose()}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         {s && (
           <DialogPrimitive.Content
+            onCloseAutoFocus={returnFocus}
             className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none"
           >
             <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">

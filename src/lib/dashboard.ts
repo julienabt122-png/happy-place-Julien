@@ -60,6 +60,8 @@ export type Metric = {
   trend: "hausse" | "baisse" | "stable";
   previous_value: number | null;
   delta: number | string | null;
+  /** Fourni par la vue metrics_with_trend. */
+  updated_at?: string;
 };
 
 export const TREND_LABELS: Record<Metric["trend"], string> = {
@@ -76,6 +78,15 @@ export function deltaText(m: Pick<Metric, "delta" | "unit"> | undefined): string
   const sign = delta > 0 ? "+" : "−";
   const suffix = m.unit === "%" ? " pts" : m.unit ? ` ${m.unit.trim()}` : "";
   return `${sign}${abs}${suffix}`;
+}
+
+/** « En hausse de 2 pts », « En baisse de 10,8 », « Stable » : phrase de tendance d'un indicateur. */
+export function trendSentence(m: Pick<Metric, "trend" | "delta" | "unit">): string {
+  if (m.trend === "stable") return "Stable";
+  const label = m.trend === "hausse" ? "En hausse" : "En baisse";
+  const delta = deltaText(m);
+  // deltaText commence par le signe (+ ou −) : la phrase le remplace par « hausse » / « baisse ».
+  return delta ? `${label} de ${delta.slice(1)}` : label;
 }
 
 export function formatMetricValue(value: number | string, unit: string | null): string {

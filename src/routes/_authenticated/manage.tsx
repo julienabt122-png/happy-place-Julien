@@ -2,7 +2,6 @@ import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router"
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BrandHeader } from "@/components/brand-header";
 import { processAttachmentDeletionQueue } from "@/lib/dashboard";
 
 export const Route = createFileRoute("/_authenticated/manage")({
@@ -50,9 +49,8 @@ function ManageLayout() {
       .finally(() => qc.invalidateQueries({ queryKey: ["attachment_deletion_queue"] }));
   }, [qc]);
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen">
-      <BrandHeader />
-      <main className="w-full max-w-interface mx-auto p-sm md:p-md space-y-md">
+    <div className="font-body-md">
+      <div className="space-y-md">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-sm">
           <div className="space-y-1">
             <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
@@ -82,7 +80,7 @@ function ManageLayout() {
         </nav>
 
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 }
