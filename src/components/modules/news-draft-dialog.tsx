@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useId, useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode, type RefObject } from "react";
 import { toast } from "sonner";
 import { CharCounter } from "@/components/expandable-card";
 import { ErrorSummary, Field, FormActions, TextArea, TextInput } from "@/components/manage/crud-ui";
@@ -17,30 +17,53 @@ import {
 } from "@/lib/news-media";
 
 /**
- * Fenêtre « Rédiger une actualité » : crée un brouillon, ou modifie celui qu'on lui donne (`draft`).
- * Un seul exemplaire, utilisé par l'accueil et par /actualites. `trigger` est le bouton qui l'ouvre ;
- * le focus lui revient à la fermeture. Droits : ceux de saveDraftNews (admin, et manager sur ses brouillons).
- * L'auteur est le nom du profil, sinon `fallbackName`.
+ * Fenêtre « Rédiger une actualité » : crée un brouillon, ou modifie l'actualité qu'on lui donne (`draft` :
+ * un brouillon, ou une actualité publiée, dont le statut ne change jamais). Un seul exemplaire, utilisé
+ * par l'accueil et par /actualites. Deux façons de l'ouvrir : `trigger` (le bouton qui l'ouvre, le focus
+ * lui revient), ou `open` / `onOpenChange` pilotés par le parent avec `returnFocusRef` (bouton d'origine).
+ * Droits : ceux de la base (admin ; manager sur ses actualités). L'auteur n'est posé qu'à la création :
+ * nom du profil, sinon `fallbackName`.
  */
 export function NewsDraftDialog({
   email,
   fallbackName,
   draft = null,
   trigger,
+  open: openProp,
+  onOpenChange,
+  returnFocusRef,
 }: {
   email: string;
   fallbackName: string;
   draft?: News | null;
-  trigger: ReactNode;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [innerOpen, setInnerOpen] = useState(false);
+  const controlled = openProp !== undefined;
+  const open = controlled ? openProp : innerOpen;
+  const setOpen = (o: boolean) => (controlled ? onOpenChange?.(o) : setInnerOpen(o));
+  const published = draft?.status === "publiée";
   return (
     <FormDialog
       open={open}
       onOpenChange={setOpen}
-      title={draft ? "Modifier le brouillon" : "Rédiger une actualité"}
-      description="Rédige l'actualité, puis enregistre-la en brouillon."
+      title={
+        published
+          ? "Modifier l'actualité"
+          : draft
+            ? "Modifier le brouillon"
+            : "Rédiger une actualité"
+      }
+      description={
+        published
+          ? "Modifie l'actualité publiée, puis enregistre tes changements."
+          : "Rédige l'actualité, puis enregistre-la en brouillon."
+      }
       trigger={trigger}
+      returnFocusRef={returnFocusRef}
     >
       {/* Monté seulement quand la fenêtre est ouverte : le formulaire repart de zéro à chaque ouverture. */}
       <NewsDraftForm
@@ -68,6 +91,7 @@ function NewsDraftForm({
   const id = useId();
   const profile = useMyProfile(email);
   const author = profileFullName(profile.data) || fallbackName;
+  const published = draft?.status === "publiée";
   const [title, setTitle] = useState(draft?.title ?? "");
   const [body, setBody] = useState(draft?.body ?? "");
   const [media, setMedia] = useState<MediaDraft>(() =>
@@ -79,7 +103,7 @@ function NewsDraftForm({
   const save = useMutation({
     mutationFn: saveDraftNews,
     onSuccess: () => {
-      toast.success("Brouillon enregistré");
+      toast.success(published ? "Actualité modifiée" : "Brouillon enregistré");
       qc.invalidateQueries({ queryKey: ["news"] });
       onDone();
     },
@@ -89,7 +113,12 @@ function NewsDraftForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setShowLinkErrs(true);
-    const res = validate(newsSchema, { title, body, author, status: "brouillon" });
+    const res = validate(newsSchema, {
+      title,
+      body,
+      author,
+      status: published ? "publiée" : "brouillon",
+    });
     if (!res.ok) {
       setErrors(res.errors);
       return;
@@ -143,7 +172,7 @@ function NewsDraftForm({
       </Field>
       <FormActions
         pending={save.isPending}
-        submitLabel="Enregistrer le brouillon"
+        submitLabel={published ? "Enregistrer les modifications" : "Enregistrer le brouillon"}
         onCancel={onDone}
       />
     </form>

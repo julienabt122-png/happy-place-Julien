@@ -16,11 +16,13 @@ import {
 } from "@/components/modules/submission-actions";
 import { STATUS_LABELS, StatusTag } from "@/components/status-tag";
 import { SubmissionReader } from "@/components/submission-reader";
+import { SubmissionTracking } from "@/components/submission-tracking";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { fetchAllSubmissions, type Submission } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { plural } from "@/lib/plural";
+import { useDeciders, useDecisions } from "@/lib/use-submission-tracking";
 
 type StatusFilter = "all" | "pending" | "validated" | "refused";
 
@@ -70,6 +72,16 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
         s.content.toLowerCase().includes(needle)),
   );
   const shown = filtered.slice(0, limit);
+
+  // Suivi de MES demandes affichées : une requête pour le décideur, une lecture d'historique
+  // limitée aux identifiants de mes propres demandes déjà décidées.
+  const myEmail = email.toLowerCase();
+  const isMine = (s: Submission) => (s.submitted_by_email ?? "").toLowerCase() === myEmail;
+  const myShown = shown.filter(isMine);
+  const deciders = useDeciders(myShown.some((s) => s.status === "en attente"));
+  const decisionHistory = useDecisions(
+    myShown.filter((s) => s.status === "validée" || s.status === "refusée").map((s) => s.id),
+  );
 
   function changeFilter(next: StatusFilter) {
     setFilter(next);
@@ -213,11 +225,14 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
                   <p className="mb-1.5 line-clamp-3 whitespace-pre-line text-base leading-relaxed text-foreground wrap-anywhere">
                     <Linkify text={s.content} />
                   </p>
-                  {s.status === "refusée" && s.rejection_category && (
-                    <p className="mb-1.5 font-label-sm text-xs text-on-surface-variant">
-                      Motif : {s.rejection_category}
-                    </p>
-                  )}
+                  <div className="mb-1.5 space-y-0.5">
+                    <SubmissionTracking
+                      s={s}
+                      mine={isMine(s)}
+                      deciders={deciders.data}
+                      decision={decisionHistory.data?.[s.id]}
+                    />
+                  </div>
                   <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
                   <Button
                     type="button"

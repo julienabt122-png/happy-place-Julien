@@ -117,18 +117,31 @@ export async function saveDraftNews(input: {
   links: NewsLink[];
   media: MediaDraft;
 }) {
-  const payload = {
-    title: input.title,
-    body: input.body,
-    author: input.author,
-    author_email: input.author_email.toLowerCase(),
-    status: "brouillon" as const,
-    links: input.links as unknown as Json,
-  };
+  const content = { title: input.title, body: input.body, links: input.links as unknown as Json };
+  // Modification : le contenu seul. Le statut (brouillon ou publiée), l'auteur et la date de création
+  // restent ceux de l'actualité, et aucun changement de statut n'est jamais envoyé.
+  const payload = input.id
+    ? content
+    : {
+        ...content,
+        author: input.author,
+        author_email: input.author_email.toLowerCase(),
+        status: "brouillon" as const,
+      };
   const { data, error } = input.id
     ? await db.from("news").update(payload).eq("id", input.id).select("id").single()
     : await db.from("news").insert(payload).select("id").single();
-  if (error) throw error;
+  if (error) {
+    // 42501 : refus de la base ; PGRST116 : aucune ligne modifiable (droits). Pas de message technique.
+    const denied = error.code === "42501" || error.code === "PGRST116";
+    throw new Error(
+      denied
+        ? input.id
+          ? "Tu ne peux pas modifier cette actualité."
+          : "Tu ne peux pas créer cette actualité."
+        : "L'enregistrement a échoué. Réessaie.",
+    );
+  }
   await applyNewsImage(data.id, input.media);
 }
 

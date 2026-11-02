@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { UseQueryResult } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ClickableRow, RowChevron, RowMainButton } from "@/components/clickable-row";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { timeAgo, type News } from "@/lib/dashboard";
 import { isNewsNew } from "@/lib/news-recent";
+import { canEditPublishedNews } from "@/lib/news-permissions";
 import { plural } from "@/lib/plural";
 
 /** Nombre d'actualités montrées : « Voir tout » mène à /actualites. */
@@ -41,6 +42,15 @@ export function NewsCard({
 }) {
   const navigate = useNavigate();
   const [reading, setReading] = useState<News | null>(null);
+  const [editing, setEditing] = useState<News | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  // Bouton d'origine : le focus lui revient après la modification.
+  const openerRef = useRef<HTMLElement | null>(null);
+  function openReading(n: News) {
+    openerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setReading(n);
+  }
   const publishDraft = usePublishDraft();
   const canReview = role === "admin" || role === "manager";
 
@@ -113,7 +123,7 @@ export function NewsCard({
               <ClickableRow flat>
                 <RowMainButton
                   label={n.title}
-                  onOpen={() => setReading(n)}
+                  onOpen={() => openReading(n)}
                   className="flex w-full items-center justify-between gap-3"
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-3">
@@ -191,7 +201,27 @@ export function NewsCard({
           </div>
         )}
       </div>
-      <NewsReader news={reading} onClose={() => setReading(null)} />
+      <NewsReader
+        news={reading}
+        onClose={() => setReading(null)}
+        onEdit={
+          reading && canEditPublishedNews(role, email, reading)
+            ? (n) => {
+                setReading(null);
+                setEditing(n);
+                setEditOpen(true);
+              }
+            : undefined
+        }
+      />
+      <NewsDraftDialog
+        email={email}
+        fallbackName={fallbackName}
+        draft={editing}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        returnFocusRef={openerRef}
+      />
       {publishDraft.confirmDialog}
     </ModuleCard>
   );

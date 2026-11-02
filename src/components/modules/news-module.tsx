@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DataTable, ListFooter, Td, Tr, type DataColumn } from "@/components/data-table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { deleteDraftNews, fetchNews, type News } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
+import { canEditPublishedNews } from "@/lib/news-permissions";
 import { plural } from "@/lib/plural";
 
 type StatusFilter = "all" | "drafts" | "published";
@@ -58,6 +59,15 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
   const [limit, setLimit] = useState(LIST_PAGE_SIZE);
   const [readingNews, setReadingNews] = useState<News | null>(null);
   const [draftToDelete, setDraftToDelete] = useState<News | null>(null);
+  const [editing, setEditing] = useState<News | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  // Bouton d'origine de la lecture ou de la modification : le focus lui revient à la fermeture.
+  const openerRef = useRef<HTMLElement | null>(null);
+  function startEdit(n: News, opener?: HTMLElement) {
+    if (opener) openerRef.current = opener;
+    setEditing(n);
+    setEditOpen(true);
+  }
 
   const news = useQuery({ queryKey: ["news"], queryFn: fetchNews, retry: false });
   const publishDraft = usePublishDraft();
@@ -248,7 +258,10 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                           size="sm"
                           aria-haspopup="dialog"
                           aria-label={`Voir le détail : ${n.title}`}
-                          onClick={() => setReadingNews(n)}
+                          onClick={(e) => {
+                            openerRef.current = e.currentTarget;
+                            setReadingNews(n);
+                          }}
                           className="-ml-3"
                         >
                           Voir le détail
@@ -266,6 +279,19 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                   </Td>
                   {canWriteNews && (
                     <Td className="text-right">
+                      {canEditPublishedNews(role, email, n) && (
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            aria-label={`Modifier : ${n.title}`}
+                            onClick={(e) => startEdit(n, e.currentTarget)}
+                            className="px-3.5"
+                          >
+                            <Icon name="edit" className="text-[18px]" /> Modifier
+                          </Button>
+                        </div>
+                      )}
                       {canEditDraft && (
                         <div className="flex items-center justify-end gap-2">
                           <NewsDraftDialog
@@ -313,7 +339,26 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
         )}
       </ModuleCard>
 
-      <NewsReader news={readingNews} onClose={() => setReadingNews(null)} />
+      <NewsReader
+        news={readingNews}
+        onClose={() => setReadingNews(null)}
+        onEdit={
+          readingNews && canEditPublishedNews(role, email, readingNews)
+            ? (n) => {
+                setReadingNews(null);
+                startEdit(n);
+              }
+            : undefined
+        }
+      />
+      <NewsDraftDialog
+        email={email}
+        fallbackName={name}
+        draft={editing}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        returnFocusRef={openerRef}
+      />
       {publishDraft.confirmDialog}
       <ConfirmDialog
         open={!!draftToDelete}

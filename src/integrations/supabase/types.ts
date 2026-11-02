@@ -454,6 +454,10 @@ export type Database = {
     }
     Functions: {
       marquer_accueil_vu: { Args: Record<PropertyKey, never>; Returns: string }
+      qui_tranche_ma_demande: {
+        Args: Record<PropertyKey, never>
+        Returns: { first_name: string | null; last_name: string | null; role: string }[]
+      }
       choisir_mon_role: {
         Args: {
           _first_name: string

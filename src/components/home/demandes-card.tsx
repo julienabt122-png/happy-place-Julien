@@ -10,11 +10,18 @@ import {
 } from "@/components/modules/submission-actions";
 import { SubmitIdeaAction } from "@/components/modules/submit-idea";
 import { InfoTag, STATUS_LABELS, StatusTag } from "@/components/status-tag";
+import { SubmissionTracking } from "@/components/submission-tracking";
 import { SubmissionReader } from "@/components/submission-reader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AppRole } from "@/lib/auth";
 import { timeAgo, type Submission } from "@/lib/dashboard";
+import {
+  useDeciders,
+  useDecisions,
+  type Decider,
+  type Decision,
+} from "@/lib/use-submission-tracking";
 
 /** Nombre de lignes montrées dans chaque onglet : « Voir tout » mène à /demandes. */
 const PREVIEW = 3;
@@ -97,6 +104,9 @@ export function DemandesCard({
   const ongoing = mine.filter((s) => s.status === "en attente");
   const decisions = mine.filter((s) => s.status !== "en attente");
   const validated = data.validated.data ?? [];
+  // Suivi : le décideur (une seule requête) et les décisions de MES demandes affichées (une seule lecture).
+  const deciders = useDeciders(ongoing.length > 0);
+  const decisionHistory = useDecisions(decisions.slice(0, PREVIEW).map((s) => s.id));
   const teams = [...new Set(validated.map((s) => s.team))].sort((a, b) => a.localeCompare(b, "fr"));
   const validatedShown = validated.filter((s) => !team || s.team === team).slice(0, PREVIEW);
 
@@ -221,7 +231,13 @@ export function DemandesCard({
               </div>
             )}
             {ongoing.slice(0, PREVIEW).map((s) => (
-              <MyRow key={s.id} s={s} onOpen={() => setReading(s)} />
+              <MyRow
+                key={s.id}
+                s={s}
+                deciders={deciders.data}
+                decision={decisionHistory.data?.[s.id]}
+                onOpen={() => setReading(s)}
+              />
             ))}
           </div>
           <div className="flex flex-col gap-2.5">
@@ -232,7 +248,13 @@ export function DemandesCard({
               </div>
             )}
             {decisions.slice(0, PREVIEW).map((s) => (
-              <MyRow key={s.id} s={s} onOpen={() => setReading(s)} />
+              <MyRow
+                key={s.id}
+                s={s}
+                deciders={deciders.data}
+                decision={decisionHistory.data?.[s.id]}
+                onOpen={() => setReading(s)}
+              />
             ))}
           </div>
         </TabsContent>
@@ -326,8 +348,18 @@ export function DemandesCard({
   );
 }
 
-/** Ligne de « Mes demandes » : en cours ou décision (date de soumission, voir D4 : pas de date de décision). */
-function MyRow({ s, onOpen }: { s: Submission; onOpen: () => void }): ReactNode {
+/** Ligne de « Mes demandes » : en cours ou décision, avec le décideur ou la décision. */
+function MyRow({
+  s,
+  deciders,
+  decision,
+  onOpen,
+}: {
+  s: Submission;
+  deciders: Decider[] | undefined;
+  decision: Decision | undefined;
+  onOpen: () => void;
+}): ReactNode {
   const pending = s.status === "en attente";
   return (
     <ClickableRow className="p-4">
@@ -348,16 +380,7 @@ function MyRow({ s, onOpen }: { s: Submission; onOpen: () => void }): ReactNode 
           </span>
         </span>
         <span className="line-clamp-2 text-sm text-primary wrap-anywhere">{s.content}</span>
-        {pending && (
-          <span className="font-label-sm text-xs text-on-surface-variant">
-            En attente de décision
-          </span>
-        )}
-        {s.status === "refusée" && s.rejection_category && (
-          <span className="font-label-sm text-xs text-on-surface-variant">
-            Motif : {s.rejection_category}
-          </span>
-        )}
+        <SubmissionTracking s={s} mine deciders={deciders} decision={decision} />
       </RowMainButton>
     </ClickableRow>
   );
