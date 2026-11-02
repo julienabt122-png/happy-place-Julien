@@ -18,7 +18,8 @@ export const Route = createFileRoute("/_authenticated/manage")({
       { property: "og:title", content: "Gestion des données — Happy Place" },
       {
         property: "og:description",
-        content: "Gestion de l'activité d'un cabinet de recrutement spécialisé dans l'IT et le digital.",
+        content:
+          "Gestion de l'activité d'un cabinet de recrutement spécialisé dans l'IT et le digital.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -30,18 +31,19 @@ export const Route = createFileRoute("/_authenticated/manage")({
   component: ManageLayout,
 });
 
-const tabs = [
-  { to: "/manage/news", label: "ACTUALITÉS", title: "Actualités" },
-  { to: "/manage/submissions", label: "DEMANDES", title: "Demandes" },
-  { to: "/manage/blockers", label: "POINTS BLOQUANTS", title: "Points bloquants" },
-  { to: "/manage/metrics", label: "INDICATEURS", title: "Indicateurs" },
-  { to: "/manage/users", label: "UTILISATEURS AUTORISÉS", title: "Utilisateurs autorisés" },
+// Anciennes pages de gestion : plus listées dans le menu Gestion (les pages de module les remplacent),
+// mais toujours joignables par leur adresse tant que les pages de module n'ont pas leurs suppressions.
+const legacyPages = [
+  { to: "/manage/news", title: "Actualités" },
+  { to: "/manage/submissions", title: "Demandes" },
+  { to: "/manage/blockers", title: "Points bloquants" },
+  { to: "/manage/metrics", title: "Indicateurs" },
 ] as const;
 
 function ManageLayout() {
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const current = tabs.find((t) => pathname.startsWith(t.to));
+  const legacy = legacyPages.find((t) => pathname.startsWith(t.to));
   // Suppression silencieuse des pièces jointes échues, une fois par chargement de /manage
   useEffect(() => {
     processAttachmentDeletionQueue()
@@ -55,29 +57,18 @@ function ManageLayout() {
   return (
     <div className="font-body-md">
       <div className="space-y-md">
-        {/* Vraie hiérarchie : « Gestion / {sous-page} ». Les onglets et les routes ne changent pas. */}
-        <PageHeader
-          title={current?.title ?? "Gestion des données"}
-          crumbs={current ? [{ label: "Gestion", to: "/manage" }] : undefined}
-          actions={
-            <Button asChild variant="outline">
-              <Link to="/">Retour à la vue d'ensemble</Link>
-            </Button>
-          }
-        />
-
-        <nav className="flex flex-wrap gap-xs border-b border-outline-variant pb-sm">
-          {tabs.map((t) => (
-            <Link
-              key={t.to}
-              to={t.to}
-              className="px-md py-xs border border-outline-variant font-label-md text-label-md text-on-surface-variant hover:bg-surface-container"
-              activeProps={{ className: "bg-primary text-on-primary border-primary" }}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Utilisateurs et Équipes ont leur propre en-tête (fil « Gestion / … » et boutons). */}
+        {legacy && (
+          <PageHeader
+            title={legacy.title}
+            crumbs={[{ label: "Gestion", to: "/manage" }]}
+            actions={
+              <Button asChild variant="outline">
+                <Link to="/">Retour à la vue d'ensemble</Link>
+              </Button>
+            }
+          />
+        )}
 
         <Outlet />
       </div>

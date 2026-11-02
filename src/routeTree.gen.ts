@@ -24,6 +24,7 @@ import { Route as AuthenticatedManageBlockersRouteImport } from './routes/_authe
 import { Route as AuthenticatedManageMetricsRouteImport } from './routes/_authenticated/manage.metrics'
 import { Route as AuthenticatedManageNewsRouteImport } from './routes/_authenticated/manage.news'
 import { Route as AuthenticatedManageSubmissionsRouteImport } from './routes/_authenticated/manage.submissions'
+import { Route as AuthenticatedManageTeamsRouteImport } from './routes/_authenticated/manage.teams'
 import { Route as AuthenticatedManageUsersRouteImport } from './routes/_authenticated/manage.users'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -106,6 +107,12 @@ const AuthenticatedManageSubmissionsRoute =
     path: '/submissions',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
+const AuthenticatedManageTeamsRoute =
+  AuthenticatedManageTeamsRouteImport.update({
+    id: '/teams',
+    path: '/teams',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
 const AuthenticatedManageUsersRoute =
   AuthenticatedManageUsersRouteImport.update({
     id: '/users',
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/manage/news': typeof AuthenticatedManageNewsRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
+  '/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
   '/manage/': typeof AuthenticatedManageIndexRoute
 }
@@ -143,6 +151,7 @@ export interface FileRoutesByTo {
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/manage/news': typeof AuthenticatedManageNewsRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
+  '/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
   '/manage': typeof AuthenticatedManageIndexRoute
 }
@@ -162,6 +171,7 @@ export interface FileRoutesById {
   '/_authenticated/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/_authenticated/manage/news': typeof AuthenticatedManageNewsRoute
   '/_authenticated/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
+  '/_authenticated/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/_authenticated/manage/users': typeof AuthenticatedManageUsersRoute
   '/_authenticated/manage/': typeof AuthenticatedManageIndexRoute
 }
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/manage/metrics'
     | '/manage/news'
     | '/manage/submissions'
+    | '/manage/teams'
     | '/manage/users'
     | '/manage/'
   fileRoutesByTo: FileRoutesByTo
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/manage/metrics'
     | '/manage/news'
     | '/manage/submissions'
+    | '/manage/teams'
     | '/manage/users'
     | '/manage'
   id:
@@ -215,6 +227,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manage/metrics'
     | '/_authenticated/manage/news'
     | '/_authenticated/manage/submissions'
+    | '/_authenticated/manage/teams'
     | '/_authenticated/manage/users'
     | '/_authenticated/manage/'
   fileRoutesById: FileRoutesById
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageSubmissionsRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
+    '/_authenticated/manage/teams': {
+      id: '/_authenticated/manage/teams'
+      path: '/teams'
+      fullPath: '/manage/teams'
+      preLoaderRoute: typeof AuthenticatedManageTeamsRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
     '/_authenticated/manage/users': {
       id: '/_authenticated/manage/users'
       path: '/users'
@@ -348,6 +368,7 @@ interface AuthenticatedManageRouteChildren {
   AuthenticatedManageMetricsRoute: typeof AuthenticatedManageMetricsRoute
   AuthenticatedManageNewsRoute: typeof AuthenticatedManageNewsRoute
   AuthenticatedManageSubmissionsRoute: typeof AuthenticatedManageSubmissionsRoute
+  AuthenticatedManageTeamsRoute: typeof AuthenticatedManageTeamsRoute
   AuthenticatedManageUsersRoute: typeof AuthenticatedManageUsersRoute
   AuthenticatedManageIndexRoute: typeof AuthenticatedManageIndexRoute
 }
@@ -357,6 +378,7 @@ const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
   AuthenticatedManageMetricsRoute: AuthenticatedManageMetricsRoute,
   AuthenticatedManageNewsRoute: AuthenticatedManageNewsRoute,
   AuthenticatedManageSubmissionsRoute: AuthenticatedManageSubmissionsRoute,
+  AuthenticatedManageTeamsRoute: AuthenticatedManageTeamsRoute,
   AuthenticatedManageUsersRoute: AuthenticatedManageUsersRoute,
   AuthenticatedManageIndexRoute: AuthenticatedManageIndexRoute,
 }

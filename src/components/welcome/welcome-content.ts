@@ -24,7 +24,7 @@ export const WELCOME_STEPS: Record<AppRole, [Step, Step, Step]> = {
     },
     {
       title: "Gérer les utilisateurs et les équipes",
-      text: "Dans « Gestion », change le rôle ou l'équipe d'une personne, retire son accès avec « Retirer (J+7) » et vérifie que chaque équipe a un manager.",
+      text: "Dans « Gestion », change le rôle ou l'équipe d'une personne, retire son accès avec « Retirer l'accès » et vérifie que chaque équipe a un manager.",
     },
   ],
   manager: [
