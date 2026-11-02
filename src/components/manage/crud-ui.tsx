@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { forwardRef, type ReactNode } from "react";
 import { FormDialog } from "@/components/modules/form-dialog";
 import { Button } from "@/components/ui/button";
 import type { FieldErrors } from "@/lib/manage-schemas";
@@ -11,21 +11,28 @@ export function ManageIcon({ name, className = "" }: { name: string; className?:
   );
 }
 
+// Champ de saisie (spec-interface § 2) : bordure 1 px #747878, rayon 4 px, texte Inter 16 px,
+// texte indicatif en mono 13 px. Le contour de focus 2 px vient de la règle globale.
 const inputBase =
-  "w-full bg-card border border-outline-variant focus:border-primary focus:outline-none p-sm font-body-md text-on-surface";
+  "w-full min-h-11 rounded-[4px] border border-outline bg-card p-3 font-body-md text-base text-on-surface placeholder:font-label-md placeholder:text-[13px] placeholder:text-on-surface-variant";
+
+const labelBase = "block font-label-md text-[13px] font-medium text-primary";
 
 export function Field({
   label,
+  htmlFor,
   error,
   children,
 }: {
   label: string;
+  /** Identifiant du champ : relie le libellé à sa saisie. */
+  htmlFor?: string;
   error?: string;
   children: ReactNode;
 }) {
   return (
     <div className="space-y-xs">
-      <label className="font-label-sm text-label-sm text-on-surface-variant uppercase block">
+      <label htmlFor={htmlFor} className={labelBase}>
         {label}
       </label>
       {children}
@@ -38,13 +45,52 @@ export function Field({
   );
 }
 
+/**
+ * Champ prérempli en lecture seule : fond #EFEDED, icône « lock », atteignable au clavier
+ * (`aria-readonly`). `describedBy` pointe vers l'aide affichée sous les champs.
+ */
+export function ReadOnlyField({
+  id,
+  label,
+  value,
+  describedBy,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  describedBy?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className={labelBase}>
+        {label}
+      </label>
+      <div className="flex h-11 items-center justify-between rounded-[4px] border border-outline bg-secondary px-3">
+        <input
+          id={id}
+          type="text"
+          readOnly
+          aria-readonly="true"
+          aria-describedby={describedBy}
+          value={value}
+          className="w-full cursor-default select-text border-0 bg-transparent p-0 font-body-md text-base text-foreground"
+        />
+        <ManageIcon name="lock" className="ml-2 shrink-0 text-[18px] text-on-surface-variant" />
+      </div>
+    </div>
+  );
+}
+
 export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputBase} ${props.className ?? ""}`} />;
 }
 
-export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={`${inputBase} ${props.className ?? ""}`} />;
-}
+export const TextArea = forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>
+>(function TextArea(props, ref) {
+  return <textarea ref={ref} {...props} className={`${inputBase} ${props.className ?? ""}`} />;
+});
 
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={`${inputBase} ${props.className ?? ""}`} />;
@@ -80,13 +126,25 @@ export function FormActions({
   submitLabel?: string;
 }) {
   return (
-    <div className="flex justify-end gap-xs pt-sm">
+    <FormFooter>
       <Button type="button" variant="outline" onClick={onCancel}>
         Annuler
       </Button>
       <Button type="submit" disabled={pending}>
         {pending ? "…" : submitLabel}
       </Button>
+    </FormFooter>
+  );
+}
+
+/**
+ * Pied de fenêtre (maquettes) : bordure haute, marges de 24 px, 16 px entre les boutons.
+ * Posé dans le corps d'un FormDialog (p-6) : les marges négatives le font toucher les bords.
+ */
+export function FormFooter({ children }: { children: ReactNode }) {
+  return (
+    <div className="-mx-6 -mb-6 mt-6 flex items-center justify-end gap-4 border-t border-outline-variant bg-card p-6">
+      {children}
     </div>
   );
 }
@@ -149,14 +207,14 @@ export function ConfirmDelete({
         Supprimer définitivement <strong className="text-primary">{label}</strong> ? Cette action
         est irréversible.
       </p>
-      <div className="flex justify-end gap-xs pt-sm">
+      <FormFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
           Annuler
         </Button>
         <Button type="button" onClick={onConfirm} disabled={pending}>
           {pending ? "Suppression…" : "Supprimer"}
         </Button>
-      </div>
+      </FormFooter>
     </Modal>
   );
 }

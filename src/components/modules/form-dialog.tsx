@@ -19,6 +19,7 @@ export function FormDialog({
   description,
   trigger,
   returnFocusRef,
+  initialFocusRef,
   children,
 }: {
   open: boolean;
@@ -32,6 +33,11 @@ export function FormDialog({
    * (ligne mise à jour après un refus), le focus passe au contenu principal.
    */
   returnFocusRef?: RefObject<HTMLElement | null>;
+  /**
+   * Champ qui reçoit le focus à l'ouverture (le premier à saisir). Sans cette option,
+   * Radix donne le focus au premier élément atteignable, qui peut être un champ en lecture seule.
+   */
+  initialFocusRef?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
   // Sans déclencheur ni bouton d'origine fourni : on retient le bouton actif à l'ouverture.
@@ -40,6 +46,16 @@ export function FormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
+        onOpenAutoFocus={
+          initialFocusRef
+            ? (e) => {
+                if (initialFocusRef.current) {
+                  e.preventDefault();
+                  initialFocusRef.current.focus();
+                }
+              }
+            : undefined
+        }
         onCloseAutoFocus={
           returnFocusRef
             ? (e) => {

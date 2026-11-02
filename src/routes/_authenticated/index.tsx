@@ -7,7 +7,7 @@ import { DemandesCard } from "@/components/home/demandes-card";
 import { MetricsCard } from "@/components/home/metrics-card";
 import { NewsCard } from "@/components/home/news-card";
 import { useHomeDemandes, type DemandesTab } from "@/components/home/use-home-demandes";
-import { userDisplayName } from "@/components/modules/news-module";
+import { useMyProfile } from "@/components/modules/use-my-profile";
 import { fetchBlockers, fetchMetrics, fetchNews } from "@/lib/dashboard";
 import { plural } from "@/lib/plural";
 
@@ -37,7 +37,8 @@ const SUMMARY_LINK =
   "rounded-sm font-semibold underline decoration-1 underline-offset-4 transition-all duration-150 hover:decoration-2";
 
 function ManagerSpace() {
-  const { role, email, user } = Route.useRouteContext();
+  const { role, email } = Route.useRouteContext();
+  const profile = useMyProfile(email);
   const canReview = role === "admin" || role === "manager";
   const data = useHomeDemandes(role, email);
   const [tab, setTab] = useState<DemandesTab>(canReview ? "a-traiter" : "mes-demandes");
@@ -51,8 +52,8 @@ function ManagerSpace() {
   // Phrase d'accueil : on attend les données pour ne pas afficher « rien à traiter » par erreur.
   const ready =
     !data.submissions.isLoading && !data.mine.isLoading && !news.isLoading && !blockers.isLoading;
-  const displayName = userDisplayName(user, email);
-  const firstName = displayName.includes("@") ? "" : displayName.split(" ")[0];
+  // Prénom de allowed_users (rempli à /choisir-role). Vide en base : « Bonjour » seul, rien d'inventé.
+  const firstName = profile.data?.firstName ?? "";
   const ongoing = (data.mine.data ?? []).filter((s) => s.status === "en attente").length;
   const toReview = data.toReview.length;
   const activeBlockers = blockers.data?.length ?? 0;

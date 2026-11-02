@@ -1,17 +1,28 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ErrorSummary, Field, FormActions, TextArea, TextInput } from "@/components/manage/crud-ui";
+import {
+  ErrorSummary,
+  Field,
+  FormActions,
+  ReadOnlyField,
+  Select,
+  TextArea,
+  TextInput,
+} from "@/components/manage/crud-ui";
 import { CharCounter, rejectionErrorMessage } from "@/components/expandable-card";
+import { FilePicker } from "@/components/modules/file-picker";
 import { FormDialog } from "@/components/modules/form-dialog";
 import { useMyTeams } from "@/components/modules/submission-actions";
+import { profileFullName, useMyProfile } from "@/components/modules/use-my-profile";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { submitIdea, type SubmissionInput } from "@/lib/dashboard";
 import { submissionSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
 
 /**
- * Bouton « Faire une demande » et sa fenêtre (Dialog shadcn). Un seul exemplaire,
+ * Bouton « Faire une demande » et sa fenêtre « Nouvelle demande » (Dialog shadcn). Un seul exemplaire,
  * utilisé par l'accueil et par /demandes. `children` est le contenu du bouton.
+ * Le nom (et l'équipe du collaborateur) viennent du profil et ne sont pas modifiables.
  */
 export function SubmitIdeaAction({
   role,
@@ -26,6 +37,11 @@ export function SubmitIdeaAction({
 }) {
   const qc = useQueryClient();
   const myTeams = useMyTeams(role, email);
+  const profile = useMyProfile(email);
+  const profileName = profileFullName(profile.data);
+  // Sans prénom ni nom en base, rien n'est inventé : le champ reste libre.
+  const nameLocked = profileName.length > 0;
+  const demandeRef = useRef<HTMLTextAreaElement>(null);
   const [submissionForm, setSubmissionForm] = useState<SubmissionInput | null>(null);
   const [submissionErrors, setSubmissionErrors] = useState<FieldErrors>({});
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -63,7 +79,13 @@ export function SubmitIdeaAction({
     // Admin: always the « Admin » team (set server-side); manager: one of their teams
     const team =
       role === "collaborateur" ? "auto" : role === "admin" ? "Admin" : submissionForm.team;
-    const result = validate(submissionSchema, { ...submissionForm, team, status: "en attente" });
+    const author_name = nameLocked ? profileName : submissionForm.author_name;
+    const result = validate(submissionSchema, {
+      ...submissionForm,
+      author_name,
+      team,
+      status: "en attente",
+    });
     if (!result.ok) {
       setSubmissionErrors(result.errors);
       return;
@@ -72,12 +94,19 @@ export function SubmitIdeaAction({
     submit.mutate(result.data);
   }
 
+  const helpText = !nameLocked
+    ? "Renseigne ton nom."
+    : role === "manager"
+      ? "Ton nom est prérempli depuis ton compte, non modifiable."
+      : "Préremplis depuis ton compte, non modifiables.";
+
   return (
     <FormDialog
       open={!!submissionForm}
       onOpenChange={(o) => (o ? openForm() : setSubmissionForm(null))}
-      title="Faire une demande"
+      title="Nouvelle demande"
       description="Décris ta demande."
+      initialFocusRef={demandeRef}
       trigger={
         <Button type="button" variant={variant}>
           {children}
@@ -85,52 +114,84 @@ export function SubmitIdeaAction({
       }
     >
       {submissionForm && (
-        <form onSubmit={sendSubmission} className="space-y-sm" noValidate>
+        <form onSubmit={sendSubmission} className="space-y-6" noValidate>
           <ErrorSummary errors={submissionErrors} />
-          <Field label="Nom" error={submissionErrors.author_name}>
-            <TextInput
-              value={submissionForm.author_name}
-              maxLength={80}
-              placeholder="Ton nom"
-              onChange={(e) =>
-                setSubmissionForm({ ...submissionForm, author_name: e.target.value })
-              }
-            />
-          </Field>
-          {role === "manager" && (
-            <Field label="Équipe" error={submissionErrors.team}>
-              <select
-                required
-                value={submissionForm.team}
-                onChange={(e) => setSubmissionForm({ ...submissionForm, team: e.target.value })}
-                className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md"
-              >
-                <option value="">Choisis une de tes équipes</option>
-                {myTeams.data?.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          )}
-          {role === "admin" && (
-            <p className="text-body-sm text-on-surface-variant">Équipe : Admin</p>
-          )}
-          <Field label="Demande" error={submissionErrors.content}>
+          <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {nameLocked ? (
+                <ReadOnlyField
+                  id="demande-nom"
+                  label="Nom"
+                  value={profileName}
+                  describedBy="demande-aide"
+                />
+              ) : (
+                <Field label="Nom" htmlFor="demande-nom" error={submissionErrors.author_name}>
+                  <TextInput
+                    id="demande-nom"
+                    value={submissionForm.author_name}
+                    maxLength={80}
+                    placeholder="Ton nom"
+                    aria-describedby="demande-aide"
+                    onChange={(e) =>
+                      setSubmissionForm({ ...submissionForm, author_name: e.target.value })
+                    }
+                  />
+                </Field>
+              )}
+              {role === "manager" ? (
+                <Field label="Équipe" htmlFor="demande-equipe" error={submissionErrors.team}>
+                  <Select
+                    id="demande-equipe"
+                    required
+                    value={submissionForm.team}
+                    onChange={(e) => setSubmissionForm({ ...submissionForm, team: e.target.value })}
+                  >
+                    <option value="">Choisis une de tes équipes</option>
+                    {myTeams.data?.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              ) : (
+                <ReadOnlyField
+                  id="demande-equipe"
+                  label="Équipe"
+                  value={role === "admin" ? "Admin" : (profile.data?.team ?? "")}
+                  describedBy="demande-aide"
+                />
+              )}
+            </div>
+            <p id="demande-aide" className="mt-1 text-sm text-on-surface-variant">
+              {helpText}
+            </p>
+          </div>
+          <Field
+            label="Ta demande (obligatoire)"
+            htmlFor="demande-texte"
+            error={submissionErrors.content}
+          >
             <TextArea
+              id="demande-texte"
+              ref={demandeRef}
               rows={5}
               value={submissionForm.content}
-              placeholder="Décris ta demande…"
+              placeholder="Décris ce dont tu as besoin…"
               onChange={(e) => setSubmissionForm({ ...submissionForm, content: e.target.value })}
             />
             <CharCounter value={submissionForm.content} max={2000} min={5} />
           </Field>
-          <Field label="Document PDF (optionnel, 20 Mo max)" error={submissionErrors.attachment}>
-            <input
-              type="file"
+          <Field
+            label="Pièce jointe (facultatif, PDF, 20 Mo max)"
+            htmlFor="demande-fichier"
+            error={submissionErrors.attachment}
+          >
+            <FilePicker
+              id="demande-fichier"
               accept="application/pdf,.pdf"
-              className="block w-full text-body-sm"
+              fileName={attachment?.name}
               onChange={(e) => {
                 const f = e.target.files?.[0] ?? null;
                 if (f && f.type !== "application/pdf") {

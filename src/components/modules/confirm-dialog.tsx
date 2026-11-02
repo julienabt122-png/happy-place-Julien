@@ -1,3 +1,4 @@
+import { FormFooter } from "@/components/manage/crud-ui";
 import { FormDialog } from "@/components/modules/form-dialog";
 import { Button } from "@/components/ui/button";
 
@@ -25,14 +26,14 @@ export function ConfirmDialog({
   return (
     <FormDialog open={open} onOpenChange={onOpenChange} title={title} description={message}>
       <p className="font-body-md text-base text-foreground">{message}</p>
-      <div className="mt-6 flex justify-end gap-4 border-t border-outline-variant pt-6">
+      <FormFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
           Annuler
         </Button>
         <Button type="button" disabled={pending} onClick={onConfirm}>
           {confirmLabel}
         </Button>
-      </div>
+      </FormFooter>
     </FormDialog>
   );
 }
