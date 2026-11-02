@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { BrandHeader } from "@/components/brand-header";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -98,6 +99,9 @@ export function AppShell({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-4 pr-8">
+          {(role === "admin" || role === "manager") && (
+            <NotificationBell role={role} email={email} />
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

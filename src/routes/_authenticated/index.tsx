@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { DepartureNotices } from "@/components/departure-notices";
 import { BlockersCard } from "@/components/home/blockers-card";
 import { DemandesCard } from "@/components/home/demandes-card";
 import { MetricsCard } from "@/components/home/metrics-card";
@@ -119,8 +118,6 @@ function ManagerSpace() {
 
   return (
     <div className="flex flex-col gap-8 font-body-md">
-      {email && <DepartureNotices email={email} />}
-
       <h1 className="sr-only">Accueil</h1>
       <p className="min-h-6 text-base text-primary">
         Bonjour{firstName ? ` ${firstName}` : ""}
