@@ -57,11 +57,10 @@ function ManageLayout() {
   return (
     <div className="font-body-md">
       <div className="space-y-md">
-        {/* Utilisateurs et Équipes ont leur propre en-tête (fil « Gestion / … » et boutons). */}
+        {/* Le nom « Gestion » est dans le bandeau de l'AppShell : pas de fil d'Ariane en double dans le contenu. */}
         {legacy && (
           <PageHeader
             title={legacy.title}
-            crumbs={[{ label: "Gestion", to: "/manage" }]}
             actions={
               <Button asChild variant="outline">
                 <Link to="/">Retour à la vue d'ensemble</Link>

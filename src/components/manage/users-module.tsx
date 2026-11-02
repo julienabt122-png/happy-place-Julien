@@ -127,7 +127,6 @@ export function UsersModule({ me }: { me: string }) {
     <div className="space-y-6">
       <PageHeader
         title="Utilisateurs"
-        crumbs={[{ label: "Gestion", to: "/manage" }]}
         summary="Gérer les personnes autorisées à se connecter et leurs équipes. Réservé aux admins."
         actions={
           <>
