@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import { FormFooter } from "@/components/manage/crud-ui";
 import { FormDialog } from "@/components/modules/form-dialog";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ export function ConfirmDialog({
   message,
   confirmLabel,
   pending = false,
+  returnFocusRef,
   onConfirm,
 }: {
   open: boolean;
@@ -21,10 +23,18 @@ export function ConfirmDialog({
   message: string;
   confirmLabel: string;
   pending?: boolean;
+  /** Bouton d'origine à qui rendre le focus (sinon : l'élément actif à l'ouverture). */
+  returnFocusRef?: RefObject<HTMLElement | null>;
   onConfirm: () => void;
 }) {
   return (
-    <FormDialog open={open} onOpenChange={onOpenChange} title={title} description={message}>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={message}
+      returnFocusRef={returnFocusRef}
+    >
       <p className="font-body-md text-base text-foreground">{message}</p>
       <FormFooter>
         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

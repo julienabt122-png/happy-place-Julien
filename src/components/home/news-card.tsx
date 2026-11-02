@@ -5,6 +5,7 @@ import { ClickableRow, RowChevron, RowMainButton } from "@/components/clickable-
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
 import { NewsDraftDialog } from "@/components/modules/news-draft-dialog";
+import { useDeleteNews } from "@/components/modules/use-delete-news";
 import { usePublishDraft } from "@/components/modules/use-publish-draft";
 import { NewsReader } from "@/components/news-reader";
 import { NewsThumb } from "@/components/news-thumb";
@@ -52,6 +53,7 @@ export function NewsCard({
     setReading(n);
   }
   const publishDraft = usePublishDraft();
+  const deleteNewsAction = useDeleteNews();
   const canReview = role === "admin" || role === "manager";
 
   const all = news.data ?? [];
@@ -213,7 +215,16 @@ export function NewsCard({
               }
             : undefined
         }
+        onDelete={
+          reading && role === "admin" && canEditPublishedNews(role, email, reading)
+            ? (n) => {
+                setReading(null);
+                deleteNewsAction.request(n, openerRef.current);
+              }
+            : undefined
+        }
       />
+      {deleteNewsAction.confirmDialog}
       <NewsDraftDialog
         email={email}
         fallbackName={fallbackName}

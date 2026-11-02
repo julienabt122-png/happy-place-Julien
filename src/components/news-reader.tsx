@@ -11,11 +11,14 @@ export function NewsReader({
   news: n,
   onClose,
   onEdit,
+  onDelete,
 }: {
   news: News | null;
   onClose: () => void;
   /** Bouton « Modifier » (admin, ou manager auteur) : fourni seulement si l'utilisateur a le droit. */
   onEdit?: (n: News) => void;
+  /** Bouton « Supprimer » (admin seulement) : fourni seulement si l'utilisateur a le droit. */
+  onDelete?: (n: News) => void;
 }) {
   const returnFocus = useReturnFocus(!!n);
   return (
@@ -50,6 +53,20 @@ export function NewsReader({
                       edit
                     </span>{" "}
                     Modifier
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-label={`Supprimer l'actualité ${n.title}`}
+                    onClick={() => onDelete(n)}
+                    className="px-3.5"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+                      delete
+                    </span>{" "}
+                    Supprimer
                   </Button>
                 )}
                 <DialogPrimitive.Close asChild>

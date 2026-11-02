@@ -9,6 +9,7 @@ import { ModuleCard } from "@/components/module-card";
 import { PageHeader, SummaryLink } from "@/components/page-header";
 import { ConfirmDialog } from "@/components/modules/confirm-dialog";
 import { NewsDraftDialog } from "@/components/modules/news-draft-dialog";
+import { useDeleteNews } from "@/components/modules/use-delete-news";
 import { usePublishDraft } from "@/components/modules/use-publish-draft";
 import { NewsReader } from "@/components/news-reader";
 import { NewsThumb } from "@/components/news-thumb";
@@ -71,6 +72,7 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
 
   const news = useQuery({ queryKey: ["news"], queryFn: fetchNews, retry: false });
   const publishDraft = usePublishDraft();
+  const deleteNewsAction = useDeleteNews();
 
   const removeDraft = useMutation({
     mutationFn: (n: { id: string; image_path?: string | null }) =>
@@ -290,6 +292,19 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                           >
                             <Icon name="edit" className="text-[18px]" /> Modifier
                           </Button>
+                          {isAdmin && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              aria-haspopup="dialog"
+                              aria-label={`Supprimer l'actualité ${n.title}`}
+                              disabled={deleteNewsAction.pending}
+                              onClick={(e) => deleteNewsAction.request(n, e.currentTarget)}
+                              className="px-3.5"
+                            >
+                              <Icon name="delete" className="text-[18px]" /> Supprimer
+                            </Button>
+                          )}
                         </div>
                       )}
                       {canEditDraft && (
@@ -350,7 +365,16 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
               }
             : undefined
         }
+        onDelete={
+          readingNews && isAdmin && canEditPublishedNews(role, email, readingNews)
+            ? (n) => {
+                setReadingNews(null);
+                deleteNewsAction.request(n, openerRef.current);
+              }
+            : undefined
+        }
       />
+      {deleteNewsAction.confirmDialog}
       <NewsDraftDialog
         email={email}
         fallbackName={name}
