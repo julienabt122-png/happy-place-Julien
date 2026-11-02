@@ -42,10 +42,9 @@ export function PageHeader({
           </span>
         </nav>
       )}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-[32px] font-semibold leading-tight text-primary">
-          {title}
-        </h1>
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-4">
+        {/* Le nom de la page est affiché une seule fois, dans le bandeau blanc de l'en-tête (AppShell). */}
+        <h1 className="sr-only">{title}</h1>
         {actions && <div className="flex items-center gap-4">{actions}</div>}
       </div>
       {summary && <p className="text-base text-foreground">{summary}</p>}
