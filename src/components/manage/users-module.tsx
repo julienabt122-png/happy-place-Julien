@@ -300,6 +300,18 @@ export function UsersModule({ me }: { me: string }) {
                       >
                         <Icon name="edit" className="text-[18px]" /> Modifier
                       </Button>
+                      {u.departure_date && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          aria-label={`Annuler le départ de ${name}`}
+                          disabled={retire.isPending}
+                          onClick={() => retire.mutate({ id: u.id, date: null })}
+                          className="px-3.5"
+                        >
+                          <Icon name="event_busy" className="text-[18px]" /> Annuler le départ
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         variant="outline"

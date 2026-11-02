@@ -31,10 +31,9 @@ export const Route = createFileRoute("/_authenticated/manage")({
   component: ManageLayout,
 });
 
-// Anciennes pages de gestion : plus listées dans le menu Gestion (les pages de module les remplacent),
+// Anciennes pages de gestion (la page Actualités a rejoint /actualites) : plus listées dans le menu Gestion (les pages de module les remplacent),
 // mais toujours joignables par leur adresse tant que les pages de module n'ont pas leurs suppressions.
 const legacyPages = [
-  { to: "/manage/news", title: "Actualités" },
   { to: "/manage/submissions", title: "Demandes" },
   { to: "/manage/blockers", title: "Points bloquants" },
   { to: "/manage/metrics", title: "Indicateurs" },
