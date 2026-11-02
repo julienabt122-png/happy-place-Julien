@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { signedNewsImageUrl } from "@/lib/news-media";
 
-/** Vignette 64 x 48 d'une actualité : l'image si elle existe, sinon une tuile avec icône. */
-export function NewsThumb({ path }: { path?: string | null }) {
+/** Vignette d'une actualité (64 x 48, ou 64 x 64 avec `tall`) : l'image si elle existe, sinon une tuile avec icône. */
+export function NewsThumb({ path, tall = false }: { path?: string | null; tall?: boolean }) {
   // Même clé de cache que NewsImage : l'URL signée n'est demandée qu'une fois.
   const q = useQuery({
     queryKey: ["news-image", path],
@@ -12,7 +12,9 @@ export function NewsThumb({ path }: { path?: string | null }) {
     retry: false,
   });
   return (
-    <div className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-outline-variant bg-secondary">
+    <div
+      className={`flex w-16 shrink-0 ${tall ? "h-16" : "h-12"} items-center justify-center overflow-hidden rounded-[4px] border border-outline-variant bg-secondary`}
+    >
       {q.data ? (
         <img src={q.data} alt="" className="h-full w-full object-cover" />
       ) : (

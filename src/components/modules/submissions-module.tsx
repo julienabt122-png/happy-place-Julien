@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { AttachmentLink } from "@/components/attachment-link";
-import { EmptyState } from "@/components/empty-state";
+import { ListFooter } from "@/components/data-table";
+import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
+import { FilterBar, FilterChips, FilterSelect, SearchField } from "@/components/filter-bar";
 import { Linkify } from "@/components/linkify";
 import { ModuleCard } from "@/components/module-card";
+import { PageHeader, SummaryLink } from "@/components/page-header";
 import { SubmitIdeaAction } from "@/components/modules/submit-idea";
 import {
   canModerateSubmission,
@@ -27,9 +30,6 @@ const STATUS_BY_FILTER: Record<Exclude<StatusFilter, "all">, string> = {
   validated: "validée",
   refused: "refusée",
 };
-
-const FIELD =
-  "h-11 rounded-[4px] border border-outline bg-card px-3 font-label-md text-[13px] text-primary";
 
 export function SubmissionsModule({ role, email }: { role: AppRole; email: string }) {
   const isAdmin = role === "admin";
@@ -77,21 +77,12 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
     setLimit(PAGE);
   }
 
-  const filters: { id: StatusFilter; label: string }[] = [
-    { id: "all", label: "Toutes" },
-    { id: "pending", label: canReview ? "À traiter" : "En attente" },
-    { id: "validated", label: "Validées" },
-    { id: "refused", label: "Refusées" },
-  ];
-
   return (
     <div className="space-y-6">
-      <section>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="font-display text-[32px] font-semibold leading-tight text-primary">
-            Demandes
-          </h1>
-          <div className="flex items-center gap-4">
+      <PageHeader
+        title="Demandes"
+        actions={
+          <>
             <Button
               type="button"
               variant="outline"
@@ -109,96 +100,64 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
               </span>
               Faire une demande
             </SubmitIdeaAction>
-          </div>
-        </div>
-        {list.data && (
-          <p className="text-base text-foreground">
-            {pendingCount > 0 ? (
-              <Button
-                type="button"
-                variant="link"
-                onClick={() => changeFilter("pending")}
-                className="h-auto p-0 text-base font-semibold"
-              >
-                {plural(pendingCount, "demande", "demandes")} {pendingLabel}
-              </Button>
-            ) : (
-              <span className="font-semibold text-primary">Aucune demande {pendingLabel}</span>
-            )}{" "}
-            · {plural(all.length, "demande", "demandes")} au total
-          </p>
-        )}
-      </section>
+          </>
+        }
+        summary={
+          list.data && (
+            <>
+              {pendingCount > 0 ? (
+                <SummaryLink onClick={() => changeFilter("pending")}>
+                  {plural(pendingCount, "demande", "demandes")} {pendingLabel}
+                </SummaryLink>
+              ) : (
+                <span className="font-semibold text-primary">Aucune demande {pendingLabel}</span>
+              )}{" "}
+              · {plural(all.length, "demande", "demandes")} au total
+            </>
+          )
+        }
+      />
 
-      <section aria-label="Filtres" className="flex flex-wrap items-center justify-between gap-4">
-        <div
-          role="group"
-          aria-label="Filtrer par statut"
-          className="flex flex-wrap items-center gap-2"
-        >
-          {filters.map((f) => (
-            <Button
-              key={f.id}
-              type="button"
-              variant="outline"
-              aria-pressed={filter === f.id}
-              onClick={() => changeFilter(f.id)}
-              className={`px-4 font-label-md text-[13px] ${
-                filter === f.id
-                  ? "border-2 bg-secondary font-semibold"
-                  : "border-outline bg-card font-medium"
-              }`}
-            >
-              {f.label}
-            </Button>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex h-11 w-[280px] max-w-full items-center gap-2 rounded-[4px] border border-outline bg-card px-3">
-            <span
-              aria-hidden="true"
-              className="material-symbols-outlined text-[22px] text-on-surface-variant"
-            >
-              search
-            </span>
-            <label htmlFor="demandes-recherche" className="sr-only">
-              Rechercher une demande
-            </label>
-            <input
+      <FilterBar
+        chips={
+          <FilterChips
+            label="Filtrer par statut"
+            value={filter}
+            onChange={changeFilter}
+            options={[
+              { id: "all", label: "Toutes" },
+              { id: "pending", label: canReview ? "À traiter" : "En attente" },
+              { id: "validated", label: "Validées" },
+              { id: "refused", label: "Refusées" },
+            ]}
+          />
+        }
+        right={
+          <>
+            <SearchField
               id="demandes-recherche"
-              type="search"
-              value={query}
+              label="Rechercher une demande"
               placeholder="Rechercher une demande…"
-              onChange={(e) => {
-                setQuery(e.target.value);
+              value={query}
+              onChange={(v) => {
+                setQuery(v);
                 setLimit(PAGE);
               }}
-              className="w-full bg-transparent font-label-md text-[13px] text-primary placeholder:text-on-surface-variant"
             />
-          </div>
-          <div>
-            <label htmlFor="demandes-equipe" className="sr-only">
-              Filtrer par équipe
-            </label>
-            <select
+            <FilterSelect
               id="demandes-equipe"
+              label="Filtrer par équipe"
+              prefix="Équipe"
               value={team}
-              onChange={(e) => {
-                setTeam(e.target.value);
+              options={teams.map((t) => ({ value: t, label: t }))}
+              onChange={(v) => {
+                setTeam(v);
                 setLimit(PAGE);
               }}
-              className={FIELD}
-            >
-              <option value="">Équipe : Toutes</option>
-              {teams.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </section>
+            />
+          </>
+        }
+      />
 
       <ModuleCard
         main
@@ -208,31 +167,20 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
         counterTone="dark"
         footer={
           list.data && filtered.length > 0 ? (
-            <div className="flex flex-col items-center gap-3">
-              <p className="font-label-sm text-xs font-medium text-on-surface-variant">
-                {plural(shown.length, "demande affichée", "demandes affichées")} sur{" "}
-                {filtered.length.toLocaleString("fr-FR")}
-              </p>
-              {filtered.length > limit && (
-                <Button type="button" variant="outline" onClick={() => setLimit((l) => l + PAGE)}>
-                  Afficher plus
-                </Button>
-              )}
-            </div>
+            <ListFooter
+              label={`${plural(shown.length, "demande affichée", "demandes affichées")} sur ${filtered.length.toLocaleString("fr-FR")}`}
+              hasMore={filtered.length > limit}
+              onMore={() => setLimit((l) => l + PAGE)}
+            />
           ) : undefined
         }
       >
-        {list.isLoading && <p className="p-6 text-base text-on-surface-variant">Chargement…</p>}
+        {list.isLoading && <LoadingState label="Chargement des demandes…" />}
         {list.isError && (
-          <div role="alert" className="flex flex-wrap items-center gap-3 p-6 text-error">
-            <span aria-hidden="true" className="material-symbols-outlined">
-              error
-            </span>
-            <p className="text-base">Les demandes sont indisponibles.</p>
-            <Button type="button" variant="outline" onClick={() => void list.refetch()}>
-              Réessayer
-            </Button>
-          </div>
+          <ErrorState
+            message="Impossible de charger les demandes. Réessaie dans un instant."
+            onRetry={() => void list.refetch()}
+          />
         )}
         {list.data && all.length === 0 && (
           <EmptyState

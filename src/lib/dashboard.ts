@@ -50,6 +50,8 @@ export type Blocker = {
   severity: string;
   status: string;
   updated_at: string;
+  /** Renvoyé par la table (select *) ; absent des lectures qui ne le demandent pas. */
+  created_at?: string;
 };
 
 export type Metric = {
@@ -242,16 +244,6 @@ export async function fetchBlockers(): Promise<Blocker[]> {
   return (data ?? []) as Blocker[];
 }
 
-export async function fetchResolvedBlockers(): Promise<Blocker[]> {
-  const { data, error } = await db
-    .from("blockers")
-    .select("*")
-    .eq("status", "RÉSOLU")
-    .order("updated_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as Blocker[];
-}
-
 export type ValidatedSubmission = Submission & { validated_at: string | null };
 
 /** Demandes validées, toutes équipes (filtrées par les règles d'accès de la base). */
@@ -277,14 +269,6 @@ export async function fetchValidatedSubmissions(): Promise<ValidatedSubmission[]
   return rows
     .map((r) => ({ ...r, validated_at: dates.get(r.id) ?? null }))
     .sort((a, b) => (b.validated_at ?? b.created_at).localeCompare(a.validated_at ?? a.created_at));
-}
-
-export async function updateBlockerStatus(input: { id: string; status: string }) {
-  const { error } = await db
-    .from("blockers")
-    .update({ status: input.status as Enums["blocker_status"], updated_at: new Date().toISOString() })
-    .eq("id", input.id);
-  if (error) throw error;
 }
 
 export async function fetchMetrics(): Promise<Metric[]> {

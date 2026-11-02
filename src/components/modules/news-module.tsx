@@ -1,18 +1,31 @@
 import type { User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ClickableRow, RowMainButton } from "@/components/clickable-row";
-import { EmptyState } from "@/components/empty-state";
+import { DataTable, ListFooter, Td, Tr, type DataColumn } from "@/components/data-table";
+import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
+import { FilterBar, FilterChips, FilterSelect, SearchField } from "@/components/filter-bar";
 import { ModuleCard } from "@/components/module-card";
+import { PageHeader, SummaryLink } from "@/components/page-header";
 import { ConfirmDialog } from "@/components/modules/confirm-dialog";
 import { NewsDraftDialog } from "@/components/modules/news-draft-dialog";
-import { NewsImage, NewsLinks } from "@/components/news-media";
-import { NewsReader } from "@/components/news-reader";
 import { usePublishDraft } from "@/components/modules/use-publish-draft";
+import { NewsReader } from "@/components/news-reader";
+import { NewsThumb } from "@/components/news-thumb";
+import { NewsStatusTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
-import { deleteDraftNews, fetchNews, timeAgo, type News } from "@/lib/dashboard";
+import { deleteDraftNews, fetchNews, type News } from "@/lib/dashboard";
+import { plural } from "@/lib/plural";
+
+const PAGE = 10;
+
+type StatusFilter = "all" | "drafts" | "published";
+
+const STATUS_BY_FILTER: Record<Exclude<StatusFilter, "all">, string> = {
+  drafts: "brouillon",
+  published: "publiée",
+};
 
 function Icon({ name, className = "" }: { name: string; className?: string }) {
   return (
@@ -21,6 +34,8 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
     </span>
   );
 }
+
+const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { dateStyle: "long" });
 
 /** Nom affiché de l'auteur : nom complet du profil, sinon nom, sinon adresse e-mail. */
 export function userDisplayName(user: User | null | undefined, email: string) {
@@ -35,14 +50,17 @@ export function userDisplayName(user: User | null | undefined, email: string) {
 export function NewsModule({ role, email, name }: { role: AppRole; email: string; name: string }) {
   const qc = useQueryClient();
   const isAdmin = role === "admin";
+  // Brouillons : admin et manager (leurs propres brouillons) ; les autres rôles ne voient que les publiées.
   const canWriteNews = role === "admin" || role === "manager";
   const myEmail = email.toLowerCase();
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [query, setQuery] = useState("");
+  const [author, setAuthor] = useState("");
+  const [limit, setLimit] = useState(PAGE);
   const [readingNews, setReadingNews] = useState<News | null>(null);
   const [draftToDelete, setDraftToDelete] = useState<News | null>(null);
 
   const news = useQuery({ queryKey: ["news"], queryFn: fetchNews, retry: false });
-  const onError = (e: unknown) => toast.error((e as Error).message);
-
   const publishDraft = usePublishDraft();
 
   const removeDraft = useMutation({
@@ -52,151 +70,250 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
       toast.success("Brouillon supprimé");
       qc.invalidateQueries({ queryKey: ["news"] });
     },
-    onError,
+    onError: (e: unknown) => toast.error((e as Error).message),
     onSettled: () => setDraftToDelete(null),
   });
 
-  const visibleDrafts = news.data?.filter((n) => n.status === "brouillon") ?? [];
-  const drafts = visibleDrafts.length;
-  const published = news.data?.filter((n) => n.status === "publiée") ?? [];
+  const all = useMemo(() => news.data ?? [], [news.data]);
+  const draftCount = all.filter((n) => n.status === "brouillon").length;
+  const authors = useMemo(
+    () => [...new Set(all.map((n) => n.author))].sort((a, b) => a.localeCompare(b, "fr")),
+    [all],
+  );
+  const needle = query.trim().toLowerCase();
+  const filtered = all.filter(
+    (n) =>
+      (filter === "all" || n.status === STATUS_BY_FILTER[filter]) &&
+      (!author || n.author === author) &&
+      (!needle ||
+        n.title.toLowerCase().includes(needle) ||
+        (n.body ?? "").toLowerCase().includes(needle) ||
+        n.author.toLowerCase().includes(needle)),
+  );
+  const shown = filtered.slice(0, limit);
+
+  function changeFilter(next: StatusFilter) {
+    setFilter(next);
+    setLimit(PAGE);
+  }
+
+  const columns: DataColumn[] = [
+    { label: "Actualité" },
+    { label: "Statut", className: "w-[120px]" },
+    { label: "Date", className: "w-[144px]" },
+    ...(canWriteNews ? [{ label: "Actions", className: "w-[380px] text-right" }] : []),
+  ];
+
+  const createButton = (
+    <NewsDraftDialog
+      email={email}
+      fallbackName={name}
+      trigger={
+        <Button type="button">
+          <Icon name="add" className="text-[20px]" /> Ajouter une actualité
+        </Button>
+      }
+    />
+  );
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-[32px] font-semibold leading-tight text-primary">
-        Actualités
-      </h1>
+      <PageHeader
+        title="Actualités"
+        actions={canWriteNews ? createButton : undefined}
+        summary={
+          news.data && (
+            <>
+              {canWriteNews && (
+                <>
+                  {draftCount > 0 ? (
+                    <SummaryLink onClick={() => changeFilter("drafts")}>
+                      {plural(draftCount, "brouillon", "brouillons")}
+                    </SummaryLink>
+                  ) : (
+                    <span className="font-semibold text-primary">Aucun brouillon</span>
+                  )}{" "}
+                  ·{" "}
+                </>
+              )}
+              {plural(all.length, "actualité", "actualités")} au total
+            </>
+          )
+        }
+      />
+
+      <FilterBar
+        chips={
+          canWriteNews ? (
+            <FilterChips
+              label="Filtrer par statut"
+              value={filter}
+              onChange={changeFilter}
+              options={[
+                { id: "all", label: "Toutes" },
+                { id: "drafts", label: "Brouillons" },
+                { id: "published", label: "Publiées" },
+              ]}
+            />
+          ) : undefined
+        }
+        right={
+          <>
+            <SearchField
+              id="actualites-recherche"
+              label="Rechercher une actualité"
+              placeholder="Rechercher une actualité…"
+              value={query}
+              onChange={(v) => {
+                setQuery(v);
+                setLimit(PAGE);
+              }}
+            />
+            <FilterSelect
+              id="actualites-auteur"
+              label="Filtrer par auteur"
+              prefix="Auteur"
+              all="Tous"
+              value={author}
+              options={authors.map((a) => ({ value: a, label: a }))}
+              onChange={(v) => {
+                setAuthor(v);
+                setLimit(PAGE);
+              }}
+            />
+          </>
+        }
+      />
+
       <ModuleCard
         main
         icon="newspaper"
-        title="Actualités du cabinet"
-        counter={
-          canWriteNews ? `${drafts} brouillon${drafts > 1 ? "s" : ""} en attente` : undefined
-        }
+        title="Liste des actualités"
+        counter={canWriteNews ? plural(draftCount, "brouillon", "brouillons") : undefined}
+        counterTone="dark"
         footer={
-          canWriteNews ? (
-            <NewsDraftDialog
-              email={email}
-              fallbackName={name}
-              trigger={
-                <Button type="button">
-                  <Icon name="edit_note" className="text-[18px]" /> Rédiger une actualité
-                </Button>
-              }
+          news.data && filtered.length > 0 ? (
+            <ListFooter
+              label={`${plural(shown.length, "actualité affichée", "actualités affichées")} sur ${filtered.length.toLocaleString("fr-FR")}`}
+              hasMore={filtered.length > limit}
+              onMore={() => setLimit((l) => l + PAGE)}
             />
           ) : undefined
         }
       >
-        <div className="flex flex-col gap-md p-6">
-          <div>
-            {canWriteNews && visibleDrafts.length > 0 && (
-              <>
-                <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm">
-                  BROUILLONS
-                </h3>
-                <div className="space-y-xs mb-md">
-                  {visibleDrafts.map((n) => {
-                    const own = (n.author_email ?? "").toLowerCase() === myEmail;
-                    const allowed = isAdmin || own;
-                    return (
-                      <div
-                        key={n.id}
-                        className="flex items-center justify-between gap-sm p-sm bg-surface-container"
-                      >
-                        <div className="flex items-center gap-md min-w-0">
-                          <Icon name="draft" className="text-on-surface-variant" />
-                          <div className="min-w-0">
-                            <p className="font-body-md text-primary flex items-center gap-xs">
-                              <span className="truncate">{n.title}</span>
-                              <span className="shrink-0 border border-outline-variant px-xs font-label-sm text-label-sm text-on-surface-variant">
-                                Brouillon
-                              </span>
-                            </p>
-                            <p className="text-xs text-on-surface-variant uppercase font-label-sm">
-                              Créé {timeAgo(n.created_at)} • Par {n.author}
-                            </p>
-                          </div>
+        {news.isLoading && <LoadingState label="Chargement des actualités…" />}
+        {news.isError && (
+          <ErrorState
+            message="Impossible de charger les actualités. Réessaie dans un instant."
+            onRetry={() => void news.refetch()}
+          />
+        )}
+        {news.data && all.length === 0 && (
+          <EmptyState
+            message={
+              canWriteNews ? "Aucune actualité pour le moment." : "Aucune actualité publiée."
+            }
+            action={canWriteNews ? createButton : undefined}
+          />
+        )}
+        {news.data && all.length > 0 && filtered.length === 0 && (
+          <EmptyState message="Aucune actualité ne correspond à ces filtres." />
+        )}
+        {shown.length > 0 && (
+          <DataTable label="Liste des actualités" columns={columns}>
+            {shown.map((n) => {
+              // Mêmes règles qu'avant : sur un brouillon, l'admin, ou le manager sur ses propres brouillons.
+              const canEditDraft =
+                n.status === "brouillon" &&
+                (isAdmin || (n.author_email ?? "").toLowerCase() === myEmail);
+              return (
+                <Tr key={n.id}>
+                  <Td>
+                    <div className="flex items-start gap-4">
+                      <NewsThumb path={n.image_path} tall />
+                      <div className="min-w-0 flex-1">
+                        <h3 className="mb-1 text-base font-semibold text-primary wrap-anywhere">
+                          {n.title}
+                        </h3>
+                        <div className="mb-1.5 font-label-sm text-xs text-on-surface-variant">
+                          {n.author}
                         </div>
-                        {allowed && (
-                          <div className="flex items-center gap-sm shrink-0">
-                            <NewsDraftDialog
-                              email={email}
-                              fallbackName={name}
-                              draft={n}
-                              trigger={
-                                <Button type="button" variant="outline" size="sm">
-                                  Modifier
-                                </Button>
-                              }
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={removeDraft.isPending}
-                              onClick={() => setDraftToDelete(n)}
-                            >
-                              Supprimer
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={publishDraft.pending}
-                              onClick={() => publishDraft.publish(n)}
-                            >
-                              Publier
-                            </Button>
-                          </div>
+                        {n.body && (
+                          <p className="mb-2 line-clamp-2 text-sm leading-relaxed text-on-surface-variant wrap-anywhere">
+                            {n.body}
+                          </p>
                         )}
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          aria-haspopup="dialog"
+                          aria-label={`Voir le détail : ${n.title}`}
+                          onClick={() => setReadingNews(n)}
+                          className="-ml-3"
+                        >
+                          Voir le détail
+                        </Button>
                       </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-            <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm">PUBLIÉES</h3>
-            <div className="space-y-xs">
-              {news.isLoading && (
-                <p className="text-body-sm text-on-surface-variant">Chargement…</p>
-              )}
-              {news.isError && (
-                <p className="text-body-sm text-error">Les actualités sont indisponibles.</p>
-              )}
-              {news.data && published.length === 0 && (
-                <EmptyState message="Aucune actualité publiée pour le moment." />
-              )}
-              {published.map((n) => (
-                <ClickableRow
-                  key={n.id}
-                  className="min-w-0 overflow-hidden bg-surface-container p-sm"
-                >
-                  <RowMainButton
-                    label={n.title}
-                    onOpen={() => setReadingNews(n)}
-                    className="block w-full min-w-0 space-y-xs"
-                  >
-                    {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}
-                    <span className="flex min-w-0 items-center justify-between gap-sm">
-                      <span className="flex min-w-0 items-center gap-md">
-                        <Icon name="article" className="text-on-surface-variant" />
-                        <span className="min-w-0">
-                          <span className="block font-body-md text-primary wrap-anywhere">
-                            {n.title}
-                          </span>
-                          <span className="block text-xs text-on-surface-variant font-label-sm">
-                            Publiée {timeAgo(n.created_at)} • Par {n.author}
-                          </span>
-                        </span>
-                      </span>
-                      {isAdmin && <Icon name="edit" className="text-on-surface-variant" />}
+                    </div>
+                  </Td>
+                  <Td>
+                    <NewsStatusTag status={n.status} />
+                  </Td>
+                  <Td>
+                    <span className="font-label-sm text-xs font-medium text-on-surface-variant">
+                      {longDate(n.created_at)}
                     </span>
-                  </RowMainButton>
-                  <NewsLinks links={n.links} />
-                </ClickableRow>
-              ))}
-            </div>
-          </div>
-        </div>
+                  </Td>
+                  {canWriteNews && (
+                    <Td className="text-right">
+                      {canEditDraft && (
+                        <div className="flex items-center justify-end gap-2">
+                          <NewsDraftDialog
+                            email={email}
+                            fallbackName={name}
+                            draft={n}
+                            trigger={
+                              <Button
+                                type="button"
+                                variant="outline"
+                                aria-label={`Modifier : ${n.title}`}
+                                className="px-3.5"
+                              >
+                                <Icon name="edit" className="text-[18px]" /> Modifier
+                              </Button>
+                            }
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            aria-label={`Supprimer : ${n.title}`}
+                            disabled={removeDraft.isPending}
+                            onClick={() => setDraftToDelete(n)}
+                            className="px-3.5"
+                          >
+                            <Icon name="delete" className="text-[18px]" /> Supprimer
+                          </Button>
+                          <Button
+                            type="button"
+                            aria-label={`Publier : ${n.title}`}
+                            disabled={publishDraft.pending}
+                            onClick={() => publishDraft.publish(n)}
+                            className="px-3.5"
+                          >
+                            Publier
+                          </Button>
+                        </div>
+                      )}
+                    </Td>
+                  )}
+                </Tr>
+              );
+            })}
+          </DataTable>
+        )}
       </ModuleCard>
+
       <NewsReader news={readingNews} onClose={() => setReadingNews(null)} />
       {publishDraft.confirmDialog}
       <ConfirmDialog

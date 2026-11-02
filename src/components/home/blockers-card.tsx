@@ -48,7 +48,9 @@ export function BlockersCard({
         {blockers.isError && (
           <p className="text-body-sm text-error">Les points bloquants sont indisponibles.</p>
         )}
-        {blockers.data?.length === 0 && <EmptyState message="Aucun point bloquant en cours." />}
+        {blockers.data?.length === 0 && (
+          <EmptyState bare message="Aucun point bloquant en cours." />
+        )}
         {blockers.data?.slice(0, PREVIEW).map((b) => (
           <ClickableRow
             key={b.id}

@@ -101,6 +101,19 @@ export function BlockerStatusTag({ status }: { status: string }) {
   );
 }
 
+/** Statut d'une actualité : « Brouillon » (neutre, `edit_note`) ou « Publiée » (positif, coche). */
+export function NewsStatusTag({ status }: { status: string }) {
+  return status === "publiée" ? (
+    <IconTag icon="check_circle" box="bg-[#D9EDDC] border-success" iconColor="text-success">
+      Publiée
+    </IconTag>
+  ) : (
+    <IconTag icon="edit_note" box="bg-secondary border-outline" iconColor="text-outline">
+      Brouillon
+    </IconTag>
+  );
+}
+
 /** Tag « Nouveau » des actualités récentes (vert de la maquette). */
 export function NewTag() {
   return (

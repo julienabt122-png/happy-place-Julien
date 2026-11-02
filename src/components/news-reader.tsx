@@ -24,7 +24,8 @@ export function NewsReader({ news: n, onClose }: { news: News | null; onClose: (
                   {n.title}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="font-label-sm text-label-sm text-on-surface-variant">
-                  Publiée le {formatExactDate(n.created_at)} • Par {n.author}
+                  {n.status === "brouillon" ? "Brouillon créé" : "Publiée"} le{" "}
+                  {formatExactDate(n.created_at)} • Par {n.author}
                 </DialogPrimitive.Description>
               </div>
               <DialogPrimitive.Close asChild>

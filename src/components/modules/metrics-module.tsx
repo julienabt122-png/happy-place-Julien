@@ -1,25 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
-import { EmptyState } from "@/components/empty-state";
+import { DataTable, Td, Tr, type DataColumn } from "@/components/data-table";
+import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
+import { PageHeader } from "@/components/page-header";
+import { MetricFormDialog } from "@/components/modules/metric-form-dialog";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
-import { deltaText, fetchMetrics, TREND_LABELS, updateMetric, type Metric } from "@/lib/dashboard";
-
-export function trendText(m: Metric | undefined) {
-  return m ? TREND_LABELS[m.trend] : "";
-}
+import { fetchMetrics, formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
+import { plural } from "@/lib/plural";
 
 export function metricOf(metrics: Metric[] | undefined, key: string) {
   return metrics?.find((m) => m.key === key);
-}
-
-export function formatMetric(m: Metric | undefined, fallback: string) {
-  if (!m) return fallback;
-  const v = Number(m.value);
-  const formatted = m.unit === "%" ? v.toFixed(1) : v.toLocaleString("fr-FR");
-  return `${formatted}${m.unit ?? ""}`;
 }
 
 export function metricLabel(metric: Metric | undefined, fallback: string) {
@@ -29,88 +21,132 @@ export function metricLabel(metric: Metric | undefined, fallback: string) {
   return metric.label;
 }
 
-export function MetricsModule({ role }: { role: AppRole }) {
-  const qc = useQueryClient();
-  const isAdmin = role === "admin";
-  const [nps, setNps] = useState<string>("");
-  const metrics = useQuery({ queryKey: ["metrics"], queryFn: fetchMetrics, retry: false });
-  const npsMetric = metricOf(metrics.data, "nps");
+function Icon({ name, className = "" }: { name: string; className?: string }) {
+  return (
+    <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>
+      {name}
+    </span>
+  );
+}
 
-  const saveMetric = useMutation({
-    mutationFn: updateMetric,
-    onSuccess: () => {
-      toast.success("KPI mis à jour");
-      qc.invalidateQueries({ queryKey: ["metrics"] });
-    },
-    onError: (e: unknown) => toast.error((e as Error).message),
-  });
+export function MetricsModule({ role }: { role: AppRole }) {
+  // Création et modification réservées à l'admin (la base refuse les autres rôles).
+  const isAdmin = role === "admin";
+  const [editing, setEditing] = useState<Metric | null>(null);
+  const metrics = useQuery({ queryKey: ["metrics"], queryFn: fetchMetrics, retry: false });
+  const all = metrics.data ?? [];
+
+  const columns: DataColumn[] = [
+    { label: "Indicateur" },
+    { label: "Valeur", className: "w-[184px]" },
+    { label: "Mise à jour", className: "w-[176px]" },
+    ...(isAdmin ? [{ label: "Actions", className: "w-[136px] text-right" }] : []),
+  ];
+
+  const createButton = (
+    <MetricFormDialog
+      trigger={
+        <Button type="button">
+          <Icon name="add" className="text-[20px]" /> Ajouter un indicateur
+        </Button>
+      }
+    />
+  );
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-[32px] font-semibold leading-tight text-primary">
-        Indicateurs
-      </h1>
-      <ModuleCard main icon="monitoring" title="Indicateurs du cabinet">
-        <div className="p-6">
-          {metrics.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}
-          {metrics.isError && (
-            <p className="text-body-sm text-error">Les indicateurs sont indisponibles.</p>
-          )}
-          {metrics.data?.length === 0 && <EmptyState message="Aucun indicateur pour le moment." />}
-          <ul className="grid grid-cols-1 gap-sm sm:grid-cols-2 lg:grid-cols-3">
-            {metrics.data?.map((m) => (
-              <li key={m.key} className="p-sm bg-card border border-outline-variant text-center">
-                <p className="font-label-sm text-label-sm text-on-surface-variant uppercase">
-                  {metricLabel(m, m.label)}
-                </p>
-                <p className="font-display text-[32px] text-primary">{formatMetric(m, "—")}</p>
-                <p className="text-[10px] text-on-surface-variant font-label-sm">
-                  {trendText(m)}
-                  {deltaText(m) && ` · ${deltaText(m)}`}
-                </p>
-              </li>
-            ))}
-          </ul>
-          {isAdmin && (
-            <div className="mt-md space-y-xs border-t border-outline-variant pt-md">
-              <label
-                htmlFor="nps-input"
-                className="font-label-sm text-label-sm text-on-surface-variant block"
-              >
-                Modifier le NPS candidats
-              </label>
-              <div className="flex gap-xs">
-                <input
-                  id="nps-input"
-                  className="flex-grow bg-card border border-outline-variant p-xs font-label-md focus:outline-none focus:border-primary"
-                  type="number"
-                  value={nps !== "" ? nps : (npsMetric?.value ?? "")}
-                  onChange={(e) => setNps(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  onClick={() =>
-                    saveMetric.mutate({
-                      key: "nps",
-                      value: Number(nps !== "" ? nps : (npsMetric?.value ?? 0)),
-                    })
-                  }
-                  disabled={saveMetric.isPending}
-                >
-                  Mettre à jour
-                </Button>
-              </div>
-              <p className="text-[10px] text-on-surface-variant italic">
-                {npsMetric
-                  ? `Tendance : ${trendText(npsMetric)}${
-                      deltaText(npsMetric) ? ` · ${deltaText(npsMetric)}` : ""
-                    }`
-                  : "Mis à jour à partir des retours candidats."}
-              </p>
-            </div>
-          )}
-        </div>
+      <PageHeader
+        title="Indicateurs"
+        actions={isAdmin ? createButton : undefined}
+        summary={metrics.data && `${plural(all.length, "indicateur", "indicateurs")} au total`}
+      />
+
+      <ModuleCard
+        main
+        icon="monitoring"
+        title="Liste des indicateurs"
+        counter={metrics.data ? plural(all.length, "indicateur", "indicateurs") : undefined}
+        counterTone="dark"
+        footer={
+          metrics.data && all.length > 0 ? (
+            <p className="text-sm text-on-surface-variant">
+              La définition et la valeur sont visibles par tous les rôles. Seul un admin peut créer
+              et modifier un indicateur.
+            </p>
+          ) : undefined
+        }
+      >
+        {metrics.isLoading && <LoadingState label="Chargement des indicateurs…" />}
+        {metrics.isError && (
+          <ErrorState
+            message="Impossible de charger les indicateurs. Réessaie dans un instant."
+            onRetry={() => void metrics.refetch()}
+          />
+        )}
+        {metrics.data && all.length === 0 && (
+          <EmptyState
+            message="Aucun indicateur pour le moment."
+            action={isAdmin ? createButton : undefined}
+          />
+        )}
+        {all.length > 0 && (
+          <DataTable label="Liste des indicateurs" columns={columns}>
+            {all.map((m) => {
+              const label = metricLabel(m, m.label);
+              return (
+                <Tr key={m.key}>
+                  <Td>
+                    <div className="min-w-0 pr-4">
+                      <h3 className="mb-1 text-base font-semibold text-primary wrap-anywhere">
+                        {label}
+                      </h3>
+                      <p className="font-label-sm text-xs text-on-surface-variant">
+                        Définition à renseigner
+                      </p>
+                    </div>
+                  </Td>
+                  <Td>
+                    <div className="flex flex-col">
+                      <span className="text-[24px] font-semibold leading-tight text-primary">
+                        {formatMetricValue(m.value, m.unit).replace(/%$/, " %")}
+                      </span>
+                      <span className="mt-1 whitespace-nowrap font-label-sm text-xs text-on-surface-variant">
+                        {trendSentence(m)}
+                      </span>
+                    </div>
+                  </Td>
+                  <Td>
+                    <span className="font-label-sm text-xs text-on-surface-variant">
+                      {m.updated_at
+                        ? new Date(m.updated_at).toLocaleDateString("fr-FR", { dateStyle: "long" })
+                        : "—"}
+                    </span>
+                  </Td>
+                  {isAdmin && (
+                    <Td className="text-right">
+                      <div className="flex items-center justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          aria-label={`Modifier : ${label}`}
+                          onClick={() => setEditing(m)}
+                          className="px-3.5"
+                        >
+                          <Icon name="edit" className="text-[18px]" /> Modifier
+                        </Button>
+                      </div>
+                    </Td>
+                  )}
+                </Tr>
+              );
+            })}
+          </DataTable>
+        )}
       </ModuleCard>
+
+      {editing && (
+        <MetricFormDialog metric={editing} open onOpenChange={(o) => !o && setEditing(null)} />
+      )}
     </div>
   );
 }

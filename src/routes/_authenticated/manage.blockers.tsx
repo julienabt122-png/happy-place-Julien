@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDelete, ManageIcon, RowActions } from "@/components/manage/crud-ui";
 import { BlockerFormDialog } from "@/components/modules/blocker-form-dialog";
+import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import { deleteBlocker, fetchAllBlockers, timeAgo, type Blocker } from "@/lib/dashboard";
 
@@ -20,12 +21,6 @@ export const Route = createFileRoute("/_authenticated/manage/blockers")({
   }),
   component: ManageBlockers,
 });
-
-const severityLabels: Record<string, string> = {
-  critical: "Critique",
-  warning: "Avertissement",
-  info: "Information",
-};
 
 function ManageBlockers() {
   const qc = useQueryClient();
@@ -71,10 +66,13 @@ function ManageBlockers() {
             <div>
               <p className="font-body-md text-primary font-bold">{b.title}</p>
               <p className="text-body-sm text-on-surface-variant">{b.description}</p>
-              <p className="text-[11px] font-label-sm text-on-surface-variant uppercase mt-xs">
-                {b.department} • {severityLabels[b.severity] ?? b.severity} • {b.status} •{" "}
-                {timeAgo(b.updated_at)}
-              </p>
+              <div className="mt-xs flex flex-wrap items-center gap-2">
+                <SeverityTag severity={b.severity} />
+                <BlockerStatusTag status={b.status} />
+                <span className="font-label-sm text-[11px] text-on-surface-variant">
+                  {b.department} • {timeAgo(b.updated_at)}
+                </span>
+              </div>
             </div>
             <RowActions onEdit={() => setDialog({ blocker: b })} onDelete={() => setToDelete(b)} />
           </article>

@@ -78,31 +78,24 @@ export function AppShell({
       <header className="z-20 flex h-16 w-full shrink-0 items-center justify-between border-b border-outline-variant bg-card">
         <div className="flex h-full min-w-0 flex-1 items-center">
           <BrandHeader variant="identity" />
-          <nav aria-label="Fil d'Ariane" className="min-w-0 px-10">
-            <ol className="flex items-center gap-1.5 text-sm">
-              {pathname.replace(/\/$/, "") !== "" && (
-                <>
-                  <li>
-                    <Link
-                      to="/"
-                      className="rounded-[4px] text-on-surface-variant underline hover:text-primary"
-                    >
-                      Accueil
-                    </Link>
-                  </li>
-                  <li aria-hidden="true" className="text-outline">
-                    &gt;
-                  </li>
-                </>
-              )}
-              <li
-                aria-current="page"
-                className="truncate font-display text-base font-semibold text-primary"
-              >
-                {pageTitle(pathname)}
-              </li>
-            </ol>
-          </nav>
+          {pathname.replace(/\/$/, "") === "" ? (
+            // Accueil : « Accueil » en fil d'Ariane (maquettes d'accueil).
+            <nav aria-label="Fil d'Ariane" className="min-w-0 px-10">
+              <ol>
+                <li
+                  aria-current="page"
+                  className="truncate font-display text-base font-semibold text-primary"
+                >
+                  Accueil
+                </li>
+              </ol>
+            </nav>
+          ) : (
+            // Autres pages : le nom de la page seul ; le fil d'Ariane est dans le contenu (PageHeader).
+            <p className="min-w-0 truncate px-10 font-display text-base font-semibold text-primary">
+              {pageTitle(pathname)}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-4 pr-8">
           <DropdownMenu>

@@ -158,7 +158,7 @@ export function DemandesCard({
               <p className="text-body-sm text-error">Les demandes sont indisponibles.</p>
             )}
             {data.submissions.data && data.toReview.length === 0 && (
-              <EmptyState message="Rien à traiter pour le moment." />
+              <EmptyState bare message="Rien à traiter pour le moment." />
             )}
             {data.toReview.slice(0, PREVIEW).map((s) => (
               <ClickableRow
@@ -268,7 +268,7 @@ export function DemandesCard({
             <p className="text-body-sm text-error">Les demandes validées sont indisponibles.</p>
           )}
           {data.validated.data && validatedShown.length === 0 && (
-            <EmptyState message="Aucune demande validée pour le moment." />
+            <EmptyState bare message="Aucune demande validée pour le moment." />
           )}
           {validatedShown.map((s) => (
             <ClickableRow key={s.id} className="p-3">

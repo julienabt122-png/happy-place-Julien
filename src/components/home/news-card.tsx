@@ -103,7 +103,7 @@ export function NewsCard({
           <p className="text-body-sm text-error">Les actualités sont indisponibles.</p>
         )}
         {news.data && published.length === 0 && (
-          <EmptyState message="Aucune actualité publiée pour le moment." />
+          <EmptyState bare message="Aucune actualité publiée pour le moment." />
         )}
         <div className="flex flex-col">
           {published.slice(0, PREVIEW).map((n, i) => (
