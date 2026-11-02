@@ -123,6 +123,21 @@ export function NewTag() {
   );
 }
 
+/**
+ * Badge « À mettre à jour » des indicateurs (maquettes d'accueil et Indicateurs) : fond #FFF1CC,
+ * bordure et icône #8A5A00, texte anthracite, mot + icône (jamais la couleur seule).
+ */
+export function StaleTag() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-[4px] border border-[#8A5A00] bg-[#FFF1CC] px-2 py-0.5 font-label-sm text-[11px] leading-tight text-primary">
+      <span aria-hidden="true" className="material-symbols-outlined text-[14px] text-[#8A5A00]">
+        update
+      </span>
+      À mettre à jour
+    </span>
+  );
+}
+
 /** Tag d'information neutre (ex. « Ma demande »). */
 export function InfoTag({ children }: { children: ReactNode }) {
   return (

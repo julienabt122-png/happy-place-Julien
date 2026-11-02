@@ -4,12 +4,14 @@ import { DataTable, ListFooter, Td, Tr, type DataColumn } from "@/components/dat
 import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
 import { PageHeader } from "@/components/page-header";
+import { StaleTag } from "@/components/status-tag";
 import { MetricFormDialog } from "@/components/modules/metric-form-dialog";
 import { useDeleteMetric } from "@/components/modules/use-delete-metric";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { fetchMetrics, formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
+import { isMetricStale } from "@/lib/metric-stale";
 import { plural } from "@/lib/plural";
 
 export function metricOf(metrics: Metric[] | undefined, key: string) {
@@ -40,6 +42,7 @@ export function MetricsModule({ role }: { role: AppRole }) {
   const metrics = useQuery({ queryKey: ["metrics"], queryFn: fetchMetrics, retry: false });
   const all = metrics.data ?? [];
   const shown = all.slice(0, limit);
+  const staleCount = all.filter((m) => isMetricStale(m.updated_at)).length;
 
   const columns: DataColumn[] = [
     { label: "Indicateur" },
@@ -63,14 +66,23 @@ export function MetricsModule({ role }: { role: AppRole }) {
       <PageHeader
         title="Indicateurs"
         actions={isAdmin ? createButton : undefined}
-        summary={metrics.data && `${plural(all.length, "indicateur", "indicateurs")} au total`}
+        summary={
+          metrics.data &&
+          `${staleCount > 0 ? `${staleCount} à mettre à jour · ` : ""}${plural(all.length, "indicateur", "indicateurs")} au total`
+        }
       />
 
       <ModuleCard
         main
         icon="monitoring"
         title="Liste des indicateurs"
-        counter={metrics.data ? plural(all.length, "indicateur", "indicateurs") : undefined}
+        counter={
+          metrics.data
+            ? staleCount > 0
+              ? `${staleCount} à mettre à jour`
+              : plural(all.length, "indicateur", "indicateurs")
+            : undefined
+        }
         counterTone="dark"
         footer={
           metrics.data && all.length > 0 ? (
@@ -133,6 +145,11 @@ export function MetricsModule({ role }: { role: AppRole }) {
                         ? new Date(m.updated_at).toLocaleDateString("fr-FR", { dateStyle: "long" })
                         : "—"}
                     </span>
+                    {isMetricStale(m.updated_at) && (
+                      <div className="mt-1.5">
+                        <StaleTag />
+                      </div>
+                    )}
                   </Td>
                   {isAdmin && (
                     <Td className="text-right">

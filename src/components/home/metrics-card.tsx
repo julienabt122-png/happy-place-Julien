@@ -5,8 +5,10 @@ import { resolveHomeKeys } from "@/components/home/home-metrics";
 import { ModuleCard } from "@/components/module-card";
 import { metricLabel, metricOf } from "@/components/modules/metrics-module";
 import { Button } from "@/components/ui/button";
+import { StaleTag } from "@/components/status-tag";
 import { useHomeMetricKeys } from "@/components/welcome/use-welcome-seen";
 import type { AppRole } from "@/lib/auth";
+import { isMetricStale } from "@/lib/metric-stale";
 import { formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
 
 /** Libellés de repli tant que la liste des indicateurs n'est pas chargée (les deux indicateurs par défaut). */
@@ -128,9 +130,12 @@ export function MetricsCard({
                 key={key}
                 className="flex flex-col justify-between gap-3 rounded-[4px] border border-outline-variant bg-background p-4"
               >
-                <span className="font-label-sm text-xs text-on-surface-variant">
-                  {metricLabel(m, FALLBACK_LABELS[key] ?? "…")}
-                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-label-sm text-xs text-on-surface-variant">
+                    {metricLabel(m, FALLBACK_LABELS[key] ?? "…")}
+                  </span>
+                  {isMetricStale(m?.updated_at) && <StaleTag />}
+                </div>
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-label-md text-[32px] font-bold leading-none text-foreground">
                     {m ? formatMetricValue(m.value, m.unit).replace(/%$/, " %") : "—"}
