@@ -13,9 +13,8 @@ import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { deleteBlocker, fetchAllBlockers, type Blocker } from "@/lib/dashboard";
+import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { plural } from "@/lib/plural";
-
-const PAGE = 10;
 
 type StatusFilter = "all" | "open" | "progress" | "resolved";
 
@@ -49,7 +48,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("");
-  const [limit, setLimit] = useState(PAGE);
+  const [limit, setLimit] = useState(LIST_PAGE_SIZE);
   const [reading, setReading] = useState<Blocker | null>(null);
   const [editing, setEditing] = useState<Blocker | null>(null);
   const [toDelete, setToDelete] = useState<Blocker | null>(null);
@@ -82,7 +81,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
 
   function changeFilter(next: StatusFilter) {
     setFilter(next);
-    setLimit(PAGE);
+    setLimit(LIST_PAGE_SIZE);
   }
 
   const columns: DataColumn[] = [
@@ -145,7 +144,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
               value={query}
               onChange={(v) => {
                 setQuery(v);
-                setLimit(PAGE);
+                setLimit(LIST_PAGE_SIZE);
               }}
             />
             <FilterSelect
@@ -156,7 +155,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
               options={SEVERITY_OPTIONS}
               onChange={(v) => {
                 setSeverity(v);
-                setLimit(PAGE);
+                setLimit(LIST_PAGE_SIZE);
               }}
             />
           </>
@@ -174,7 +173,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
             <ListFooter
               label={`${plural(shown.length, "point bloquant affiché", "points bloquants affichés")} sur ${filtered.length.toLocaleString("fr-FR")}`}
               hasMore={filtered.length > limit}
-              onMore={() => setLimit((l) => l + PAGE)}
+              onMore={() => setLimit((l) => l + LIST_PAGE_SIZE)}
             />
           ) : undefined
         }

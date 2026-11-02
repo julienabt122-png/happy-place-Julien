@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 export type Crumb = { label: string; to: LinkProps["to"] };
 
 /**
- * En-tête commun des pages de module (maquettes « Page module ») : titre, boutons d'action à droite,
- * phrase de synthèse dessous. Pas de fil d'Ariane par défaut (il ferait doublon avec le titre) :
+ * En-tête commun des pages de module (maquettes « Page module ») : phrase de synthèse à gauche et boutons
+ * d'action à droite sur la même ligne (le titre est masqué : il est dans le bandeau de l'AppShell). Pas de fil d'Ariane par défaut (il ferait doublon avec le titre) :
  * `crumbs` ne sert que là où il y a une vraie hiérarchie (Gestion et ses sous-pages).
  */
 export function PageHeader({
@@ -42,12 +42,14 @@ export function PageHeader({
           </span>
         </nav>
       )}
-      <div className="mb-3 flex flex-wrap items-center justify-end gap-4">
-        {/* Le nom de la page est affiché une seule fois, dans le bandeau blanc de l'en-tête (AppShell). */}
-        <h1 className="sr-only">{title}</h1>
-        {actions && <div className="flex items-center gap-4">{actions}</div>}
-      </div>
-      {summary && <p className="text-base text-foreground">{summary}</p>}
+      {/* Le nom de la page est affiché une seule fois, dans le bandeau blanc de l'en-tête (AppShell). */}
+      <h1 className="sr-only">{title}</h1>
+      {(summary || actions) && (
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          {summary && <p className="min-w-0 text-base text-foreground">{summary}</p>}
+          {actions && <div className="ml-auto flex flex-wrap items-center gap-4">{actions}</div>}
+        </div>
+      )}
     </section>
   );
 }

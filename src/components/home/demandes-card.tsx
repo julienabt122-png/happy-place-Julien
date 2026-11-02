@@ -116,8 +116,8 @@ export function DemandesCard({
           <Button
             type="button"
             variant="outline"
-            aria-label="Exporter mes demandes au format CSV"
-            title="Exporter mes demandes au format CSV"
+            aria-label="Mes demandes en attente ou validées des 30 derniers jours, au format CSV"
+            title="Mes demandes en attente ou validées des 30 derniers jours, au format CSV"
             disabled={exportReport.isPending}
             onClick={() => exportReport.mutate()}
           >

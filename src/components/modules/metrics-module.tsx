@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { DataTable, Td, Tr, type DataColumn } from "@/components/data-table";
+import { DataTable, ListFooter, Td, Tr, type DataColumn } from "@/components/data-table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
 import { PageHeader } from "@/components/page-header";
@@ -8,6 +8,7 @@ import { MetricFormDialog } from "@/components/modules/metric-form-dialog";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { fetchMetrics, formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
+import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { plural } from "@/lib/plural";
 
 export function metricOf(metrics: Metric[] | undefined, key: string) {
@@ -33,8 +34,10 @@ export function MetricsModule({ role }: { role: AppRole }) {
   // Création et modification réservées à l'admin (la base refuse les autres rôles).
   const isAdmin = role === "admin";
   const [editing, setEditing] = useState<Metric | null>(null);
+  const [limit, setLimit] = useState(LIST_PAGE_SIZE);
   const metrics = useQuery({ queryKey: ["metrics"], queryFn: fetchMetrics, retry: false });
   const all = metrics.data ?? [];
+  const shown = all.slice(0, limit);
 
   const columns: DataColumn[] = [
     { label: "Indicateur" },
@@ -69,10 +72,17 @@ export function MetricsModule({ role }: { role: AppRole }) {
         counterTone="dark"
         footer={
           metrics.data && all.length > 0 ? (
-            <p className="text-sm text-on-surface-variant">
-              La définition et la valeur sont visibles par tous les rôles. Seul un admin peut créer
-              et modifier un indicateur.
-            </p>
+            <div className="flex flex-col items-center gap-4">
+              <ListFooter
+                label={`${plural(shown.length, "indicateur affiché", "indicateurs affichés")} sur ${all.length.toLocaleString("fr-FR")}`}
+                hasMore={all.length > limit}
+                onMore={() => setLimit((l) => l + LIST_PAGE_SIZE)}
+              />
+              <p className="text-sm text-on-surface-variant">
+                La définition et la valeur sont visibles par tous les rôles. Seul un admin peut
+                créer et modifier un indicateur.
+              </p>
+            </div>
           ) : undefined
         }
       >
@@ -91,7 +101,7 @@ export function MetricsModule({ role }: { role: AppRole }) {
         )}
         {all.length > 0 && (
           <DataTable label="Liste des indicateurs" columns={columns}>
-            {all.map((m) => {
+            {shown.map((m) => {
               const label = metricLabel(m, m.label);
               return (
                 <Tr key={m.key}>
