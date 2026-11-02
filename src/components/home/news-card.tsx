@@ -93,6 +93,7 @@ export function NewsCard({
               <div className="flex flex-col items-end gap-0.5 text-right">
                 <Link
                   to="/actualites"
+                  search={{ statut: "brouillons" }}
                   className="group inline-flex items-center gap-1 text-sm font-semibold text-primary"
                 >
                   <span className="underline decoration-1 underline-offset-4 group-hover:decoration-2">

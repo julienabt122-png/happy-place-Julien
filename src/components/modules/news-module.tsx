@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DataTable, ListFooter, Td, Tr, type DataColumn } from "@/components/data-table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
@@ -16,7 +16,7 @@ import { NewsThumb } from "@/components/news-thumb";
 import { NewsStatusTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
-import { deleteDraftNews, fetchNews, type News } from "@/lib/dashboard";
+import { deleteDraftNews, fetchNews, timeAgo, type News } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { canEditPublishedNews } from "@/lib/news-permissions";
 import { plural } from "@/lib/plural";
@@ -48,13 +48,28 @@ export function userDisplayName(user: User | null | undefined, email: string) {
   );
 }
 
-export function NewsModule({ role, email, name }: { role: AppRole; email: string; name: string }) {
+export function NewsModule({
+  role,
+  email,
+  name,
+  initialFilter,
+}: {
+  role: AppRole;
+  email: string;
+  name: string;
+  /** Filtre de départ (lien « N brouillons à publier » de l'accueil). */
+  initialFilter?: "drafts";
+}) {
   const qc = useQueryClient();
   const isAdmin = role === "admin";
   // Brouillons : admin et manager (leurs propres brouillons) ; les autres rôles ne voient que les publiées.
   const canWriteNews = role === "admin" || role === "manager";
   const myEmail = email.toLowerCase();
-  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [filter, setFilter] = useState<StatusFilter>(initialFilter ?? "all");
+  // Le lien de l'accueil peut arriver alors que la page est déjà ouverte.
+  useEffect(() => {
+    if (initialFilter) setFilter(initialFilter);
+  }, [initialFilter]);
   const [query, setQuery] = useState("");
   const [author, setAuthor] = useState("");
   const [limit, setLimit] = useState(LIST_PAGE_SIZE);
@@ -101,7 +116,14 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
         (n.body ?? "").toLowerCase().includes(needle) ||
         n.author.toLowerCase().includes(needle)),
   );
-  const shown = filtered.slice(0, limit);
+  // Brouillons à publier : du plus ancien au plus récent, pour traiter d'abord ceux qui attendent le plus.
+  const ordered =
+    filter === "drafts"
+      ? [...filtered].sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        )
+      : filtered;
+  const shown = ordered.slice(0, limit);
 
   function changeFilter(next: StatusFilter) {
     setFilter(next);
@@ -278,6 +300,11 @@ export function NewsModule({ role, email, name }: { role: AppRole; email: string
                     <span className="font-label-sm text-xs font-medium text-on-surface-variant">
                       {longDate(n.created_at)}
                     </span>
+                    {n.status === "brouillon" && (
+                      <span className="mt-1 block font-label-sm text-xs text-on-surface-variant">
+                        Créé {timeAgo(n.created_at)}
+                      </span>
+                    )}
                   </Td>
                   {canWriteNews && (
                     <Td className="text-right">
