@@ -4,7 +4,7 @@ import { DataTable, ListFooter, Td, Tr, type DataColumn } from "@/components/dat
 import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
 import { PageHeader } from "@/components/page-header";
-import { StaleTag } from "@/components/status-tag";
+import { InfoTag, StaleTag } from "@/components/status-tag";
 import { MetricFormDialog } from "@/components/modules/metric-form-dialog";
 import { useDeleteMetric } from "@/components/modules/use-delete-metric";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import type { AppRole } from "@/lib/auth";
 import { fetchMetrics, formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { isMetricStale } from "@/lib/metric-stale";
+import { metricDefinitionOf } from "@/lib/metric-definitions";
 import { plural } from "@/lib/plural";
 
 export function metricOf(metrics: Metric[] | undefined, key: string) {
@@ -46,6 +47,7 @@ export function MetricsModule({ role }: { role: AppRole }) {
 
   const columns: DataColumn[] = [
     { label: "Indicateur" },
+    { label: "Périmètre", className: "w-[140px]" },
     { label: "Valeur", className: "w-[184px]" },
     { label: "Mise à jour", className: "w-[176px]" },
     ...(isAdmin ? [{ label: "Actions", className: "w-[136px] text-right" }] : []),
@@ -125,9 +127,16 @@ export function MetricsModule({ role }: { role: AppRole }) {
                         {label}
                       </h3>
                       <p className="font-label-sm text-xs text-on-surface-variant">
-                        Définition à renseigner
+                        {metricDefinitionOf(m.key)?.definition ?? "Définition à renseigner"}
                       </p>
                     </div>
+                  </Td>
+                  <Td>
+                    {metricDefinitionOf(m.key) ? (
+                      <InfoTag>{metricDefinitionOf(m.key)?.scope}</InfoTag>
+                    ) : (
+                      <span className="text-sm text-on-surface-variant">—</span>
+                    )}
                   </Td>
                   <Td>
                     <div className="flex flex-col">

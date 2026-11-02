@@ -2,13 +2,15 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { MetricsChoiceDialog } from "@/components/home/metrics-choice-dialog";
 import { MetricsEditDialog } from "@/components/home/metrics-edit-dialog";
 import { resolveHomeKeys } from "@/components/home/home-metrics";
+import { MetricDefinitionButton } from "@/components/metric-definition";
 import { ModuleCard } from "@/components/module-card";
 import { metricLabel, metricOf } from "@/components/modules/metrics-module";
 import { Button } from "@/components/ui/button";
-import { StaleTag } from "@/components/status-tag";
+import { InfoTag, StaleTag } from "@/components/status-tag";
 import { useHomeMetricKeys } from "@/components/welcome/use-welcome-seen";
 import type { AppRole } from "@/lib/auth";
 import { isMetricStale } from "@/lib/metric-stale";
+import { metricDefinitionOf } from "@/lib/metric-definitions";
 import { formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
 
 /** Libellés de repli tant que la liste des indicateurs n'est pas chargée (les deux indicateurs par défaut). */
@@ -131,10 +133,19 @@ export function MetricsCard({
                 className="flex flex-col justify-between gap-3 rounded-[4px] border border-outline-variant bg-background p-4"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-label-sm text-xs text-on-surface-variant">
-                    {metricLabel(m, FALLBACK_LABELS[key] ?? "…")}
-                  </span>
-                  {isMetricStale(m?.updated_at) && <StaleTag />}
+                  <div className="flex min-w-0 items-center gap-1">
+                    <span className="font-label-sm text-xs text-on-surface-variant">
+                      {metricLabel(m, FALLBACK_LABELS[key] ?? "…")}
+                    </span>
+                    <MetricDefinitionButton
+                      metricKey={key}
+                      label={metricLabel(m, FALLBACK_LABELS[key] ?? key)}
+                    />
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                    {metricDefinitionOf(key) && <InfoTag>{metricDefinitionOf(key)?.scope}</InfoTag>}
+                    {isMetricStale(m?.updated_at) && <StaleTag />}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-label-md text-[32px] font-bold leading-none text-foreground">
