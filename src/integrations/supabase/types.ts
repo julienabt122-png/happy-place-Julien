@@ -52,6 +52,7 @@ export type Database = {
           departure_date: string | null
           email: string
           first_name: string | null
+          home_metric_keys: string[] | null
           id: string
           last_name: string | null
           team: string | null
@@ -62,6 +63,7 @@ export type Database = {
           departure_date?: string | null
           email: string
           first_name?: string | null
+          home_metric_keys?: string[] | null
           id?: string
           last_name?: string | null
           team?: string | null
@@ -72,6 +74,7 @@ export type Database = {
           departure_date?: string | null
           email?: string
           first_name?: string | null
+          home_metric_keys?: string[] | null
           id?: string
           last_name?: string | null
           team?: string | null
@@ -453,6 +456,7 @@ export type Database = {
       }
     }
     Functions: {
+      definir_mes_indicateurs: { Args: { _keys: string[] }; Returns: string[] }
       marquer_accueil_vu: { Args: Record<PropertyKey, never>; Returns: string }
       qui_tranche_ma_demande: {
         Args: Record<PropertyKey, never>

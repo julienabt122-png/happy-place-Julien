@@ -1,12 +1,35 @@
 import type { UseQueryResult } from "@tanstack/react-query";
+import { MetricsChoiceDialog } from "@/components/home/metrics-choice-dialog";
+import { MetricsEditDialog } from "@/components/home/metrics-edit-dialog";
+import { resolveHomeKeys } from "@/components/home/home-metrics";
 import { ModuleCard } from "@/components/module-card";
 import { metricLabel, metricOf } from "@/components/modules/metrics-module";
+import { Button } from "@/components/ui/button";
+import { useHomeMetricKeys } from "@/components/welcome/use-welcome-seen";
+import type { AppRole } from "@/lib/auth";
 import { formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
 
-const SHOWN = [
-  { key: "training_kpi", fallback: "Taux de placement" },
-  { key: "active_users", fallback: "Missions actives" },
-] as const;
+/** Libellés de repli tant que la liste des indicateurs n'est pas chargée (les deux indicateurs par défaut). */
+const FALLBACK_LABELS: Record<string, string> = {
+  training_kpi: "Taux de placement",
+  active_users: "Missions actives",
+};
+
+/** 1 carte : pleine largeur ; 2 : deux colonnes ; 3 : trois ; 4 : 2 x 2, puis 4 colonnes en grand écran. Une colonne sur petit écran. */
+const GRID_BY_COUNT: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-1 md:grid-cols-2",
+  3: "grid-cols-1 md:grid-cols-3",
+  4: "grid-cols-1 md:grid-cols-2 xl:grid-cols-4",
+};
+
+function Icon({ name, className = "" }: { name: string; className?: string }) {
+  return (
+    <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>
+      {name}
+    </span>
+  );
+}
 
 function TrendMark({ trend }: { trend: Metric["trend"] }) {
   if (trend === "stable")
@@ -36,8 +59,21 @@ function TrendMark({ trend }: { trend: Metric["trend"] }) {
   );
 }
 
-/** Bandeau Indicateurs de l'accueil : taux de placement et missions actives. */
-export function MetricsCard({ metrics }: { metrics: UseQueryResult<Metric[]> }) {
+/**
+ * Bandeau Indicateurs de l'accueil : les indicateurs choisis par la personne (de 1 à 4, dans l'ordre
+ * choisi), sinon taux de placement et missions actives. Une clé disparue de `metrics` est ignorée.
+ */
+export function MetricsCard({
+  role,
+  email,
+  metrics,
+}: {
+  role: AppRole;
+  email: string;
+  metrics: UseQueryResult<Metric[]>;
+}) {
+  const stored = useHomeMetricKeys(email);
+  const keys = resolveHomeKeys(stored.data, metrics.data);
   return (
     <ModuleCard
       id="indicateurs"
@@ -45,13 +81,42 @@ export function MetricsCard({ metrics }: { metrics: UseQueryResult<Metric[]> }) 
       title="Indicateurs"
       seeAllTo="/indicateurs"
       seeAllLabel="Voir tout : indicateurs"
+      footer={
+        <div className="flex flex-wrap items-center gap-4">
+          {role === "admin" && (
+            <MetricsEditDialog
+              metrics={metrics}
+              trigger={
+                <Button type="button" aria-haspopup="dialog">
+                  <Icon name="edit" className="text-[18px]" /> Modifier les indicateurs
+                </Button>
+              }
+            />
+          )}
+          <MetricsChoiceDialog
+            email={email}
+            metrics={metrics}
+            trigger={
+              <Button
+                type="button"
+                variant={role === "admin" ? "outline" : "default"}
+                aria-haspopup="dialog"
+                title="Modifier les indicateurs affichés sur mon tableau de bord"
+                aria-label="Choisir mes indicateurs : modifier ceux affichés sur mon tableau de bord"
+              >
+                <Icon name="tune" className="text-[18px]" /> Choisir mes indicateurs
+              </Button>
+            }
+          />
+        </div>
+      }
     >
       <div className="p-6">
         {metrics.isError && (
           <p className="mb-3 text-body-sm text-error">Les indicateurs sont indisponibles.</p>
         )}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {SHOWN.map(({ key, fallback }) => {
+        <div className={`grid gap-6 ${GRID_BY_COUNT[keys.length] ?? GRID_BY_COUNT[2]}`}>
+          {keys.map((key) => {
             const m = metricOf(metrics.data, key);
             return (
               <div
@@ -59,7 +124,7 @@ export function MetricsCard({ metrics }: { metrics: UseQueryResult<Metric[]> }) 
                 className="flex flex-col justify-between gap-3 rounded-[4px] border border-outline-variant bg-background p-4"
               >
                 <span className="font-label-sm text-xs text-on-surface-variant">
-                  {metricLabel(m, fallback)}
+                  {metricLabel(m, FALLBACK_LABELS[key] ?? "…")}
                 </span>
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-label-md text-[32px] font-bold leading-none text-foreground">

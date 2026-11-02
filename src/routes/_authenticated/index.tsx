@@ -150,7 +150,7 @@ function ManagerSpace() {
         </div>
       </div>
 
-      <MetricsCard metrics={metrics} />
+      <MetricsCard role={role} email={email} metrics={metrics} />
     </div>
   );
 }
