@@ -38,7 +38,7 @@ export const WELCOME_STEPS: Record<AppRole, [Step, Step, Step]> = {
     },
     {
       title: "Suivre les points bloquants et les indicateurs",
-      text: "« Points bloquants » liste les sujets qui freinent le travail, et « Indicateurs » donne les chiffres clés. Tu peux les lire, pas les modifier.",
+      text: "« Points bloquants » liste les sujets qui freinent le travail, et « Indicateurs » donne les chiffres clés. Tu peux choisir ceux qui s'affichent sur ton accueil.",
     },
   ],
   collaborateur: [
