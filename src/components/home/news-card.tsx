@@ -12,6 +12,7 @@ import { NewTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
 import { timeAgo, type News } from "@/lib/dashboard";
+import { isNewsNew } from "@/lib/news-recent";
 import { plural } from "@/lib/plural";
 
 /** Nombre d'actualités montrées : « Voir tout » mène à /actualites. */
@@ -130,7 +131,7 @@ export function NewsCard({
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    {Date.now() - new Date(n.created_at).getTime() < 7 * DAY && <NewTag />}
+                    {isNewsNew(n.created_at) && <NewTag />}
                     <RowChevron />
                   </span>
                 </RowMainButton>
