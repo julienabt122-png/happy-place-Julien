@@ -155,6 +155,7 @@ function EditForm({
         <Select
           id={`${id}-role`}
           value={role}
+          disabled={isMe}
           aria-describedby={`${id}-role-aide`}
           onChange={(e) => setRole(e.target.value as AppRole)}
         >
@@ -165,7 +166,9 @@ function EditForm({
           ))}
         </Select>
         <p id={`${id}-role-aide`} className="text-sm text-on-surface-variant">
-          Le rôle définit ce que la personne peut voir et faire.
+          {isMe
+            ? "Tu ne peux pas modifier ton propre rôle depuis la gestion. Demande à un autre admin."
+            : "Le rôle définit ce que la personne peut voir et faire."}
         </p>
       </Field>
 
