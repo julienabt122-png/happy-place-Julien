@@ -37,6 +37,10 @@ function messageLisible(message: string): string {
   if (/password/i.test(message) && /least|6|caract/i.test(message)) {
     return "Le mot de passe doit contenir au moins 8 caractères.";
   }
+  // Supabase remplace le message du trigger par ce texte générique : on ne peut pas dire si l'adresse est listée.
+  if (/database error saving new user/i.test(message)) {
+    return "Impossible de créer ton accès avec cette adresse. Si elle n'est pas dans la liste des personnes autorisées, demande à un admin de t'ajouter, puis reviens ici.";
+  }
   return `Une erreur est survenue : ${message}`;
 }
 
@@ -113,7 +117,9 @@ function EntreePage() {
       if (data.session) {
         navigate({ to: "/" });
       } else {
-        setInfo("Compte créé. Ouvre le mail de confirmation reçu, puis reviens te connecter.");
+        setInfo(
+          "Presque terminé : un mail de confirmation vient d'être envoyé à ton adresse. Ouvre-le et clique sur le lien pour finaliser la création de ton compte. Ensuite, reviens ici pour te connecter avec ton mot de passe.",
+        );
         setMode("connexion");
       }
       return;
@@ -150,6 +156,14 @@ function EntreePage() {
               <h2 className="mt-md font-label-md text-label-md uppercase text-on-surface-variant">
                 {titre}
               </h2>
+
+              {mode === "inscription" && (
+                <p className="mt-sm font-body-sm text-on-surface-variant">
+                  Saisis ton adresse et choisis ton mot de passe. Un mail de confirmation va t'être
+                  envoyé : tu devras cliquer sur le lien qu'il contient pour finaliser la création
+                  de ton compte.
+                </p>
+              )}
 
               {error && (
                 <p
