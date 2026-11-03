@@ -8,6 +8,9 @@ import { introParDefaut, lienSur, objetDuMail, renderEmail } from "./render.ts";
 const SECRET = Deno.env.get("DIGEST_SECRET") ?? "";
 const DB_URL = Deno.env.get("SUPABASE_DB_URL") ?? "";
 const APP_URL_PAR_DEFAUT = Deno.env.get("APP_URL") ?? "";
+// Adresses fictives (comptes de démonstration et de test) : jamais de mail. Les domaines .test, .example,
+// .invalid et .localhost sont réservés et ne peuvent pas être de vraies adresses ; happyplace.com est un nom de démonstration.
+const ADRESSE_FICTIVE = /@([^@]+\.)?(test|example|invalid|localhost)$|@happyplace\.com$/i;
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -54,7 +57,9 @@ Deno.serve(async (req) => {
         join public.allowed_user_roles r on r.allowed_user_id = u.id
        where u.departure_date is null or u.departure_date > current_date
        order by u.email`;
-    const emails = lignes.map((l) => l.email).filter((e) => !seulement || seulement.includes(e));
+    const emails = lignes.map((l) => l.email)
+      .filter((e) => !ADRESSE_FICTIVE.test(e))
+      .filter((e) => !seulement || seulement.includes(e));
 
     const resumes: unknown[] = [];
     const erreurs: { email: string }[] = [];
