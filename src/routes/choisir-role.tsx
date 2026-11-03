@@ -30,11 +30,6 @@ const ROLES: { value: AppRole; label: string; description: string }[] = [
     label: "Manager",
     description: "Je valide ou refuse les demandes de mon équipe, je rédige des actualités et je suis les points bloquants.",
   },
-  {
-    value: "admin",
-    label: "Admin",
-    description: "Je gère tout : contenus, indicateurs, équipes et utilisateurs.",
-  },
 ];
 
 function ChoisirRolePage() {
