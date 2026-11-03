@@ -274,14 +274,10 @@ export async function fetchValidatedSubmissions(): Promise<ValidatedSubmission[]
   const rows = (data ?? []) as Submission[];
   const dates = new Map<string, string>();
   if (rows.length) {
-    // L'historique peut ne pas être lisible pour tous : dans ce cas, date de soumission.
-    const { data: hist } = await db
-      .from("submission_status_history")
-      .select("submission_id, changed_at")
-      .eq("new_status", "validée")
-      .in("submission_id", rows.map((r) => r.id))
-      .order("changed_at", { ascending: false });
-    for (const h of hist ?? []) if (!dates.has(h.submission_id)) dates.set(h.submission_id, h.changed_at);
+    // La date de validation vient d'une fonction qui ne renvoie que cette date (l'historique lui-même
+    // n'est plus lisible pour les demandes des autres équipes). Sans date : date de soumission.
+    const { data: validations } = await db.rpc("dates_validation_demandes");
+    for (const v of validations ?? []) dates.set(v.submission_id, v.validated_at);
   }
   return rows
     .map((r) => ({ ...r, validated_at: dates.get(r.id) ?? null }))

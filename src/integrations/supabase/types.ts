@@ -464,6 +464,10 @@ export type Database = {
       }
     }
     Functions: {
+      dates_validation_demandes: {
+        Args: Record<PropertyKey, never>
+        Returns: { submission_id: string; validated_at: string }[]
+      }
       definir_mes_indicateurs: { Args: { _keys: string[] }; Returns: string[] }
       marquer_accueil_vu: { Args: Record<PropertyKey, never>; Returns: string }
       qui_tranche_ma_demande: {
