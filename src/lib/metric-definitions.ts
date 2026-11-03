@@ -40,5 +40,23 @@ export const METRIC_DEFINITIONS: Record<string, MetricDefinition> = {
   },
 };
 
-export const metricDefinitionOf = (key: string): MetricDefinition | undefined =>
-  METRIC_DEFINITIONS[key];
+export const SCOPE_LABELS: Record<string, string> = {
+  entreprise: "Entreprise",
+  individuel: "Individuel",
+};
+
+/**
+ * Définition et périmètre à afficher : la base d'abord (metrics.definition, metrics.scope), le fichier
+ * ci-dessus en repli pour une clé sans définition en base. Le périmètre vient toujours de la base ;
+ * tant que l'indicateur n'est pas chargé, aucun périmètre n'est affiché.
+ */
+export function resolveMetricInfo(
+  key: string,
+  metric?: { definition?: string | null; scope?: string | null },
+): { definition: string | null; scope: string | null } {
+  const fromBase = metric?.definition?.trim() || null;
+  return {
+    definition: fromBase ?? METRIC_DEFINITIONS[key]?.definition ?? null,
+    scope: metric ? (SCOPE_LABELS[metric.scope ?? "entreprise"] ?? null) : null,
+  };
+}

@@ -10,7 +10,7 @@ import { InfoTag, StaleTag } from "@/components/status-tag";
 import { useHomeMetricKeys } from "@/components/welcome/use-welcome-seen";
 import type { AppRole } from "@/lib/auth";
 import { isMetricStale } from "@/lib/metric-stale";
-import { metricDefinitionOf } from "@/lib/metric-definitions";
+import { resolveMetricInfo } from "@/lib/metric-definitions";
 import { formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
 
 /** Libellés de repli tant que la liste des indicateurs n'est pas chargée (les deux indicateurs par défaut). */
@@ -140,11 +140,14 @@ export function MetricsCard({
                     <MetricDefinitionButton
                       metricKey={key}
                       label={metricLabel(m, FALLBACK_LABELS[key] ?? key)}
+                      metric={m}
                     />
                   </div>
                   {/* Étiquettes sous le libellé : tiennent à 1, 2, 3 ou 4 cartes sans rien couper. */}
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {metricDefinitionOf(key) && <InfoTag>{metricDefinitionOf(key)?.scope}</InfoTag>}
+                    {resolveMetricInfo(key, m).scope && (
+                      <InfoTag>{resolveMetricInfo(key, m).scope}</InfoTag>
+                    )}
                     {isMetricStale(m?.updated_at) && <StaleTag />}
                   </div>
                 </div>

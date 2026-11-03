@@ -64,6 +64,10 @@ export type Metric = {
   delta: number | string | null;
   /** Fourni par la vue metrics_with_trend. */
   updated_at?: string;
+  /** « entreprise » ou « individuel » (colonne metrics.scope). */
+  scope?: string | null;
+  /** Définition saisie par l'admin (NULL si vide) ; le fichier metric-definitions.ts sert de repli. */
+  definition?: string | null;
 };
 
 export const TREND_LABELS: Record<Metric["trend"], string> = {
@@ -334,6 +338,8 @@ export type MetricInput = {
   label: string;
   value: number;
   unit: string | null;
+  scope: "entreprise" | "individuel";
+  definition: string | null;
 };
 
 export async function fetchAllNews(): Promise<News[]> {

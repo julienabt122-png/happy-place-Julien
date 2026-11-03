@@ -1,14 +1,37 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ErrorSummary, Field, FormActions, TextInput } from "@/components/manage/crud-ui";
+import {
+  ErrorSummary,
+  Field,
+  FormActions,
+  Select,
+  TextArea,
+  TextInput,
+} from "@/components/manage/crud-ui";
 import { FormDialog } from "@/components/modules/form-dialog";
 import { createMetric, updateMetricRow, type Metric, type MetricInput } from "@/lib/dashboard";
 import { metricSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
 
-type FormState = { key: string; label: string; value: string; unit: string };
+type FormState = {
+  key: string;
+  label: string;
+  value: string;
+  unit: string;
+  scope: "entreprise" | "individuel";
+  definition: string;
+};
 
-const empty: FormState = { key: "", label: "", value: "", unit: "" };
+const empty: FormState = {
+  key: "",
+  label: "",
+  value: "",
+  unit: "",
+  scope: "entreprise",
+  definition: "",
+};
+
+const DEFINITION_MAX = 400;
 
 /**
  * Fenêtre « Nouvel indicateur » (création) ou « Modifier l'indicateur » (`metric` fourni). Un seul
@@ -53,6 +76,8 @@ function MetricForm({ metric, onDone }: { metric: Metric | null; onDone: () => v
           label: metric.label,
           value: String(metric.value),
           unit: metric.unit ?? "",
+          scope: metric.scope === "individuel" ? "individuel" : "entreprise",
+          definition: metric.definition ?? "",
         }
       : { ...empty },
   );
@@ -77,6 +102,9 @@ function MetricForm({ metric, onDone }: { metric: Metric | null; onDone: () => v
       label: form.label,
       value: raw === "" || Number.isNaN(Number(raw)) ? Number.NaN : Number(raw),
       unit: form.unit.trim() === "" ? null : form.unit,
+      scope: form.scope,
+      // Vide ou espaces : NULL (la base refuse une chaîne vide).
+      definition: form.definition.trim() === "" ? null : form.definition,
     };
     const res = validate(metricSchema, candidate);
     if (!res.ok) {
@@ -127,6 +155,35 @@ function MetricForm({ metric, onDone }: { metric: Metric | null; onDone: () => v
           />
         </Field>
       </div>
+      <Field label="Périmètre (obligatoire)" htmlFor={`${id}-perimetre`} error={errors.scope}>
+        <Select
+          id={`${id}-perimetre`}
+          value={form.scope}
+          onChange={(e) => setForm({ ...form, scope: e.target.value as FormState["scope"] })}
+        >
+          <option value="entreprise">Entreprise</option>
+          <option value="individuel">Individuel</option>
+        </Select>
+      </Field>
+      <Field label="Définition (optionnel)" htmlFor={`${id}-definition`} error={errors.definition}>
+        <TextArea
+          id={`${id}-definition`}
+          rows={3}
+          value={form.definition}
+          aria-describedby={`${id}-definition-compteur`}
+          placeholder="Explique en une phrase ce que mesure l'indicateur."
+          onChange={(e) => setForm({ ...form, definition: e.target.value })}
+        />
+        <p
+          id={`${id}-definition-compteur`}
+          aria-live="polite"
+          className={`text-right font-label-sm text-xs ${
+            form.definition.length > DEFINITION_MAX ? "text-error" : "text-on-surface-variant"
+          }`}
+        >
+          {form.definition.length} sur {DEFINITION_MAX}
+        </p>
+      </Field>
       <FormActions pending={save.isPending} onCancel={onDone} />
     </form>
   );

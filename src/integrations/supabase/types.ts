@@ -227,22 +227,28 @@ export type Database = {
       }
       metrics: {
         Row: {
+          definition: string | null
           key: string
           label: string
+          scope: string
           unit: string | null
           updated_at: string
           value: number
         }
         Insert: {
+          definition?: string | null
           key: string
           label: string
+          scope?: string
           unit?: string | null
           updated_at?: string
           value: number
         }
         Update: {
+          definition?: string | null
           key?: string
           label?: string
+          scope?: string
           unit?: string | null
           updated_at?: string
           value?: number
@@ -443,10 +449,12 @@ export type Database = {
     Views: {
       metrics_with_trend: {
         Row: {
+          definition: string | null
           delta: number | null
           key: string | null
           label: string | null
           previous_value: number | null
+          scope: string | null
           trend: string | null
           unit: string | null
           updated_at: string | null

@@ -12,7 +12,7 @@ import type { AppRole } from "@/lib/auth";
 import { fetchMetrics, formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { isMetricStale } from "@/lib/metric-stale";
-import { metricDefinitionOf } from "@/lib/metric-definitions";
+import { resolveMetricInfo } from "@/lib/metric-definitions";
 import { plural } from "@/lib/plural";
 
 export function metricOf(metrics: Metric[] | undefined, key: string) {
@@ -127,13 +127,13 @@ export function MetricsModule({ role }: { role: AppRole }) {
                         {label}
                       </h3>
                       <p className="font-label-sm text-xs text-on-surface-variant">
-                        {metricDefinitionOf(m.key)?.definition ?? "Définition à renseigner"}
+                        {resolveMetricInfo(m.key, m).definition ?? "Définition à renseigner"}
                       </p>
                     </div>
                   </Td>
                   <Td>
-                    {metricDefinitionOf(m.key) ? (
-                      <InfoTag>{metricDefinitionOf(m.key)?.scope}</InfoTag>
+                    {resolveMetricInfo(m.key, m).scope ? (
+                      <InfoTag>{resolveMetricInfo(m.key, m).scope}</InfoTag>
                     ) : (
                       <span className="text-sm text-on-surface-variant">—</span>
                     )}

@@ -65,6 +65,11 @@ export const metricSchema = z.object({
     .number({ invalid_type_error: "Valeur numérique requise" })
     .finite("Valeur numérique requise"),
   unit: z.string().trim().max(8, "8 caractères maximum").nullable(),
+  scope: z.enum(["entreprise", "individuel"], {
+    errorMap: () => ({ message: "Choisis le périmètre" }),
+  }),
+  // Vide ou espaces : NULL (la base refuse une chaîne vide).
+  definition: z.string().trim().max(400, "La définition dépasse 400 caractères").nullable(),
 });
 
 export type FieldErrors = Record<string, string>;
