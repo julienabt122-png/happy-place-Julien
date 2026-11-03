@@ -132,9 +132,9 @@ export function MetricsCard({
                 key={key}
                 className="flex flex-col justify-between gap-3 rounded-[4px] border border-outline-variant bg-background p-4"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-1">
-                    <span className="font-label-sm text-xs text-on-surface-variant">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-1">
+                    <span className="min-w-0 font-label-sm text-xs text-on-surface-variant wrap-anywhere">
                       {metricLabel(m, FALLBACK_LABELS[key] ?? "…")}
                     </span>
                     <MetricDefinitionButton
@@ -142,7 +142,8 @@ export function MetricsCard({
                       label={metricLabel(m, FALLBACK_LABELS[key] ?? key)}
                     />
                   </div>
-                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                  {/* Étiquettes sous le libellé : tiennent à 1, 2, 3 ou 4 cartes sans rien couper. */}
+                  <div className="flex flex-wrap items-center gap-1.5">
                     {metricDefinitionOf(key) && <InfoTag>{metricDefinitionOf(key)?.scope}</InfoTag>}
                     {isMetricStale(m?.updated_at) && <StaleTag />}
                   </div>
