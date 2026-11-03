@@ -40,6 +40,24 @@ export function canModerateSubmission(role: string, myTeams: string[], s: Submis
   );
 }
 
+/**
+ * Peut voir l'historique des décisions de cette demande : sa propre demande, l'admin, ou le manager
+ * de l'équipe concernée. Les demandes validées des autres équipes restent lisibles (« Par équipe »),
+ * mais sans leur historique. Confort d'affichage : la politique de la base n'est pas modifiée ici.
+ */
+export function canSeeSubmissionHistory(
+  role: string,
+  email: string,
+  myTeams: string[],
+  s: Submission,
+) {
+  return (
+    role === "admin" ||
+    (role === "manager" && myTeams.includes(s.team)) ||
+    (s.submitted_by_email ?? "").toLowerCase() === email.toLowerCase()
+  );
+}
+
 /** Export CSV des demandes récentes de l'utilisateur (même logique qu'à l'origine sur l'accueil). */
 export function useExportReport(email: string | null | undefined) {
   return useMutation({

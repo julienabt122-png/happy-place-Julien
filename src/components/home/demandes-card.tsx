@@ -5,6 +5,7 @@ import type { HomeDemandes, DemandesTab } from "@/components/home/use-home-deman
 import { ModuleCard } from "@/components/module-card";
 import {
   canModerateSubmission,
+  canSeeSubmissionHistory,
   useExportReport,
   useSubmissionReview,
 } from "@/components/modules/submission-actions";
@@ -326,6 +327,9 @@ export function DemandesCard({
 
       <SubmissionReader
         submission={reading}
+        showHistory={
+          !!reading && canSeeSubmissionHistory(role, email, data.myTeams.data ?? [], reading)
+        }
         statusLabel={reading ? (STATUS_LABELS[reading.status] ?? reading.status) : undefined}
         onClose={() => setReading(null)}
         onReject={

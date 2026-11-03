@@ -16,6 +16,7 @@ export function SubmissionReader({
   onReject,
   onApprove,
   approving,
+  showHistory = false,
 }: {
   submission: Submission | null;
   statusLabel?: string;
@@ -23,6 +24,8 @@ export function SubmissionReader({
   onReject?: () => void;
   onApprove?: () => void;
   approving?: boolean;
+  /** Historique des décisions : seulement pour ma demande, ou en tant qu'admin / manager de l'équipe. */
+  showHistory?: boolean;
 }) {
   const returnFocus = useReturnFocus(!!s);
   return (
@@ -40,12 +43,15 @@ export function SubmissionReader({
                   {s.author_name}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="font-label-sm text-label-sm text-on-surface-variant">
-                  {s.team} • {statusLabel ?? STATUS_LABELS[s.status] ?? s.status} • Soumise le {formatExactDate(s.created_at)}
+                  {s.team} • {statusLabel ?? STATUS_LABELS[s.status] ?? s.status} • Soumise le{" "}
+                  {formatExactDate(s.created_at)}
                 </DialogPrimitive.Description>
               </div>
               <DialogPrimitive.Close asChild>
                 <Button type="button" variant="ghost" size="icon" aria-label="Fermer">
-                  <span aria-hidden="true" className="material-symbols-outlined">close</span>
+                  <span aria-hidden="true" className="material-symbols-outlined">
+                    close
+                  </span>
                 </Button>
               </DialogPrimitive.Close>
             </div>
@@ -57,10 +63,12 @@ export function SubmissionReader({
               {s.status === "refusée" && s.rejection_category && (
                 <div className="p-sm bg-error-container text-on-error-container text-body-sm wrap-anywhere">
                   <p className="font-bold">Motif : {s.rejection_category}</p>
-                  <p className="whitespace-pre-line">Raison : <Linkify text={s.rejection_note ?? ""} /></p>
+                  <p className="whitespace-pre-line">
+                    Raison : <Linkify text={s.rejection_note ?? ""} />
+                  </p>
                 </div>
               )}
-              <SubmissionHistory submissionId={s.id} />
+              {showHistory && <SubmissionHistory submissionId={s.id} />}
             </div>
             {(onReject || onApprove) && (
               <div className="flex gap-xs border-t border-outline-variant p-md">

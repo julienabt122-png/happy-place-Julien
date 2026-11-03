@@ -11,6 +11,7 @@ import { useDeleteSubmission } from "@/components/modules/use-delete-submission"
 import { SubmitIdeaAction } from "@/components/modules/submit-idea";
 import {
   canModerateSubmission,
+  canSeeSubmissionHistory,
   useExportReport,
   useMyTeams,
   useSubmissionReview,
@@ -299,6 +300,7 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
 
       <SubmissionReader
         submission={reading}
+        showHistory={!!reading && canSeeSubmissionHistory(role, email, myTeams.data ?? [], reading)}
         statusLabel={reading ? (STATUS_LABELS[reading.status] ?? reading.status) : undefined}
         onClose={() => setReading(null)}
         onReject={
