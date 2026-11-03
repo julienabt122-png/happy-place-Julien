@@ -33,8 +33,8 @@ export const WELCOME_STEPS: Record<AppRole, [Step, Step, Step]> = {
       text: "Clique sur « Faire une demande » pour la tienne. Dans « À traiter », ouvre une demande de ton équipe, puis clique sur « Valider » ou « Refuser ». Un refus demande un motif.",
     },
     {
-      title: "Publier mes brouillons",
-      text: "Dans « Mes brouillons », relis ton actualité, puis clique sur « Publier ».",
+      title: "Rédiger et publier mes actualités",
+      text: "Clique sur « Rédiger une actualité » pour enregistrer un brouillon. Dans « Mes brouillons », relis-le, puis clique sur « Publier ».",
     },
     {
       title: "Suivre les points bloquants et les indicateurs",
