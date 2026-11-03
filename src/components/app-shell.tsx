@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { BrandHeader } from "@/components/brand-header";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { useMyProfile } from "@/components/modules/use-my-profile";
+import { profileFullName, useMyProfile } from "@/components/modules/use-my-profile";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -27,6 +27,9 @@ const ROLE_LABELS: Record<AppRole, string> = {
   manager: "MANAGER",
   collaborateur: "COLLABORATEUR",
 };
+
+// Formulaire de retour des utilisateurs (Tally, plan gratuit).
+const FEEDBACK_URL = "https://tally.so/r/X5LvRO";
 
 const MAIN_ENTRIES = [
   { to: "/", label: "Accueil", icon: "home" },
@@ -126,7 +129,7 @@ export function AppShell({
                 className="gap-2.5 border-outline-variant bg-card px-3 hover:bg-hover-gris"
               >
                 <Icon name="person" />
-                <span className="font-body-md text-sm font-medium text-foreground">{email}</span>
+                <span className="font-body-md text-sm font-medium text-foreground">{profileFullName(profile.data) || profile.data?.contactEmail || email}</span>
                 <span className="rounded-[4px] bg-secondary px-2 py-0.5 font-label-sm text-[11px] leading-tight text-primary">
                   {ROLE_LABELS[role]}
                 </span>
@@ -137,6 +140,11 @@ export function AppShell({
               align="end"
               className="min-w-[220px] rounded-[8px] border-primary bg-card p-1"
             >
+              {profile.data?.contactEmail && (
+                <p className="px-3 py-2 font-label-sm text-[13px] text-on-surface-variant">
+                  Mail : {profile.data.contactEmail}
+                </p>
+              )}
               <DropdownMenuItem
                 asChild
                 className="h-11 cursor-pointer rounded-[4px] px-3 text-sm focus:bg-hover-gris"
@@ -207,6 +215,16 @@ export function AppShell({
               <Icon name="help_outline" className="text-primary" />
               Aide
             </Button>
+            <a
+              href={FEEDBACK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={ENTRY_IDLE}
+            >
+              <Icon name="rate_review" className="text-primary" />
+              Donner mon avis sur Happy Place
+              <span className="sr-only"> (s'ouvre dans un nouvel onglet)</span>
+            </a>
           </div>
         </aside>
 

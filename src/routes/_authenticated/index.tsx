@@ -5,6 +5,7 @@ import { BlockersCard } from "@/components/home/blockers-card";
 import { DemandesCard } from "@/components/home/demandes-card";
 import { MetricsCard } from "@/components/home/metrics-card";
 import { NewsCard } from "@/components/home/news-card";
+import { SendSummaryButton } from "@/components/home/send-summary-button";
 import { useHomeDemandes, type DemandesTab } from "@/components/home/use-home-demandes";
 import { userDisplayName } from "@/components/modules/news-module";
 import { useMyProfile } from "@/components/modules/use-my-profile";
@@ -119,23 +120,26 @@ function ManagerSpace() {
   return (
     <div className="flex flex-col gap-8 font-body-md">
       <h1 className="sr-only">Accueil</h1>
-      <p className="min-h-6 text-base text-primary">
-        Bonjour{firstName ? ` ${firstName}` : ""}
-        {ready &&
-          (parts.length > 0 ? (
-            <>
-              ,{" "}
-              {parts.map((p, i) => (
-                <span key={i}>
-                  {i > 0 && " · "}
-                  {p}
-                </span>
-              ))}
-            </>
-          ) : (
-            ", rien à traiter pour le moment."
-          ))}
-      </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <p className="min-h-6 text-base text-primary">
+          Bonjour{firstName ? ` ${firstName}` : ""}
+          {ready &&
+            (parts.length > 0 ? (
+              <>
+                ,{" "}
+                {parts.map((p, i) => (
+                  <span key={i}>
+                    {i > 0 && " · "}
+                    {p}
+                  </span>
+                ))}
+              </>
+            ) : (
+              ", rien à traiter pour le moment."
+            ))}
+        </p>
+        <SendSummaryButton />
+      </div>
 
       <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
         <DemandesCard role={role} email={email} data={data} tab={tab} onTabChange={setTab} />

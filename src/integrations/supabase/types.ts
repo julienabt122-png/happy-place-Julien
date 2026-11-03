@@ -57,6 +57,7 @@ export type Database = {
           last_name: string | null
           team: string | null
           welcome_seen_at: string | null
+          contact_email: string | null
         }
         Insert: {
           created_at?: string
@@ -68,6 +69,7 @@ export type Database = {
           last_name?: string | null
           team?: string | null
           welcome_seen_at?: string | null
+          contact_email?: string | null
         }
         Update: {
           created_at?: string
@@ -79,6 +81,7 @@ export type Database = {
           last_name?: string | null
           team?: string | null
           welcome_seen_at?: string | null
+          contact_email?: string | null
         }
         Relationships: [
           {
@@ -470,6 +473,7 @@ export type Database = {
       }
       definir_mes_indicateurs: { Args: { _keys: string[] }; Returns: string[] }
       marquer_accueil_vu: { Args: Record<PropertyKey, never>; Returns: string }
+      definir_mon_email_contact: { Args: { _email: string }; Returns: string }
       qui_tranche_ma_demande: {
         Args: Record<PropertyKey, never>
         Returns: { first_name: string | null; last_name: string | null; role: string }[]

@@ -5,6 +5,7 @@ export type MyProfile = {
   firstName: string | null;
   lastName: string | null;
   team: string | null;
+  contactEmail: string | null;
 };
 
 /**
@@ -20,7 +21,7 @@ export function useMyProfile(email: string | null | undefined) {
     queryFn: async (): Promise<MyProfile> => {
       const { data, error } = await supabase
         .from("allowed_users")
-        .select("first_name, last_name, team")
+        .select("first_name, last_name, team, contact_email")
         .eq("email", (email ?? "").toLowerCase())
         .maybeSingle();
       if (error) throw error;
@@ -29,6 +30,7 @@ export function useMyProfile(email: string | null | undefined) {
         firstName: clean(data?.first_name),
         lastName: clean(data?.last_name),
         team: clean(data?.team),
+        contactEmail: clean(data?.contact_email),
       };
     },
   });

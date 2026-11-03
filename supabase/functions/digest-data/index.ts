@@ -51,19 +51,20 @@ Deno.serve(async (req) => {
 
   const sql = postgres(DB_URL, { max: 1, prepare: false });
   try {
-    const lignes = await sql<{ email: string }[]>`
-      select u.email
+    // identite : adresse du profil (clé des droits) ; destinataire : adresse de contact si la personne l'a donnée.
+    const lignes = await sql<{ identite: string; destinataire: string }[]>`
+      select u.email as identite, coalesce(u.contact_email, u.email) as destinataire
         from public.allowed_users u
         join public.allowed_user_roles r on r.allowed_user_id = u.id
        where u.departure_date is null or u.departure_date > current_date
        order by u.email`;
-    const emails = lignes.map((l) => l.email)
-      .filter((e) => !ADRESSE_FICTIVE.test(e))
-      .filter((e) => !seulement || seulement.includes(e));
+    const cibles = lignes
+      .filter((l) => !ADRESSE_FICTIVE.test(l.destinataire))
+      .filter((l) => !seulement || seulement.includes(l.destinataire));
 
     const resumes: unknown[] = [];
     const erreurs: { email: string }[] = [];
-    for (const email of emails) {
+    for (const { identite: email, destinataire } of cibles) {
       try {
         const resume = await sql.begin(async (tx) => {
           await tx`select set_config('request.jwt.claims', ${
@@ -79,6 +80,7 @@ Deno.serve(async (req) => {
         if (resume) {
           resumes.push({
             ...resume,
+            email: destinataire,
             donnees: JSON.stringify(resume),
             objet: objetDuMail(resume),
             intro_defaut: introParDefaut(resume),
