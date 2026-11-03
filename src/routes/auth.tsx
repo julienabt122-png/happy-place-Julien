@@ -56,14 +56,33 @@ function EntreePage() {
 
   useEffect(() => {
     let cancelled = false;
+    // Délai maximum : si la session ne répond pas, on affiche la connexion au lieu de bloquer la page.
+    const delai = <T,>(p: Promise<T>) =>
+      Promise.race([
+        p,
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("délai dépassé")), 5000)),
+      ]);
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (data.session) {
-        navigate({ to: "/" });
-        return;
+      try {
+        const { data } = await delai(supabase.auth.getSession());
+        if (cancelled) return;
+        if (data.session) {
+          // Le jeton peut pointer vers un compte supprimé : on vérifie auprès du serveur.
+          const { error: errUser } = await delai(supabase.auth.getUser());
+          if (cancelled) return;
+          if (errUser) {
+            await supabase.auth.signOut({ scope: "local" });
+            setChecking(false);
+            return;
+          }
+          navigate({ to: "/" });
+          return;
+        }
+      } catch {
+        if (cancelled) return;
+        await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
       }
-      setChecking(false);
+      if (!cancelled) setChecking(false);
     })();
     return () => {
       cancelled = true;
