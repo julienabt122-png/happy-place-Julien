@@ -1,4 +1,5 @@
 import { createFileRoute, isRedirect, Outlet, redirect } from "@tanstack/react-router";
+import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOwnRole } from "@/lib/auth";
 
@@ -21,5 +22,14 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({ to: "/auth" });
     }
   },
-  component: () => <Outlet />,
+  component: AuthenticatedLayout,
 });
+
+function AuthenticatedLayout() {
+  const { email, role } = Route.useRouteContext();
+  return (
+    <AppShell email={email} role={role}>
+      <Outlet />
+    </AppShell>
+  );
+}

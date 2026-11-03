@@ -50,6 +50,8 @@ export type Blocker = {
   severity: string;
   status: string;
   updated_at: string;
+  /** Renvoyé par la table (select *) ; absent des lectures qui ne le demandent pas. */
+  created_at?: string;
 };
 
 export type Metric = {
@@ -60,6 +62,12 @@ export type Metric = {
   trend: "hausse" | "baisse" | "stable";
   previous_value: number | null;
   delta: number | string | null;
+  /** Fourni par la vue metrics_with_trend. */
+  updated_at?: string;
+  /** « entreprise » ou « individuel » (colonne metrics.scope). */
+  scope?: string | null;
+  /** Définition saisie par l'admin (NULL si vide) ; le fichier metric-definitions.ts sert de repli. */
+  definition?: string | null;
 };
 
 export const TREND_LABELS: Record<Metric["trend"], string> = {
@@ -76,6 +84,15 @@ export function deltaText(m: Pick<Metric, "delta" | "unit"> | undefined): string
   const sign = delta > 0 ? "+" : "−";
   const suffix = m.unit === "%" ? " pts" : m.unit ? ` ${m.unit.trim()}` : "";
   return `${sign}${abs}${suffix}`;
+}
+
+/** « En hausse de 2 pts », « En baisse de 10,8 », « Stable » : phrase de tendance d'un indicateur. */
+export function trendSentence(m: Pick<Metric, "trend" | "delta" | "unit">): string {
+  if (m.trend === "stable") return "Stable";
+  const label = m.trend === "hausse" ? "En hausse" : "En baisse";
+  const delta = deltaText(m);
+  // deltaText commence par le signe (+ ou −) : la phrase le remplace par « hausse » / « baisse ».
+  return delta ? `${label} de ${delta.slice(1)}` : label;
 }
 
 export function formatMetricValue(value: number | string, unit: string | null): string {
@@ -104,18 +121,31 @@ export async function saveDraftNews(input: {
   links: NewsLink[];
   media: MediaDraft;
 }) {
-  const payload = {
-    title: input.title,
-    body: input.body,
-    author: input.author,
-    author_email: input.author_email.toLowerCase(),
-    status: "brouillon" as const,
-    links: input.links as unknown as Json,
-  };
+  const content = { title: input.title, body: input.body, links: input.links as unknown as Json };
+  // Modification : le contenu seul. Le statut (brouillon ou publiée), l'auteur et la date de création
+  // restent ceux de l'actualité, et aucun changement de statut n'est jamais envoyé.
+  const payload = input.id
+    ? content
+    : {
+        ...content,
+        author: input.author,
+        author_email: input.author_email.toLowerCase(),
+        status: "brouillon" as const,
+      };
   const { data, error } = input.id
     ? await db.from("news").update(payload).eq("id", input.id).select("id").single()
     : await db.from("news").insert(payload).select("id").single();
-  if (error) throw error;
+  if (error) {
+    // 42501 : refus de la base ; PGRST116 : aucune ligne modifiable (droits). Pas de message technique.
+    const denied = error.code === "42501" || error.code === "PGRST116";
+    throw new Error(
+      denied
+        ? input.id
+          ? "Tu ne peux pas modifier cette actualité."
+          : "Tu ne peux pas créer cette actualité."
+        : "L'enregistrement a échoué. Réessaie.",
+    );
+  }
   await applyNewsImage(data.id, input.media);
 }
 
@@ -178,7 +208,7 @@ export async function exportMyRecentSubmissions(email: string): Promise<number> 
   const rows = data ?? [];
   if (rows.length === 0) return 0;
 
-  const header = ["Date", "Auteur", "E-mail", "Équipe", "Question soumise", "Statut"];
+  const header = ["Date", "Auteur", "E-mail", "Équipe", "Demande", "Statut"];
   const csv = [
     header.map(csvCell).join(";"),
     ...rows.map((row) =>
@@ -197,7 +227,7 @@ export async function exportMyRecentSubmissions(email: string): Promise<number> 
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `soumissions-30-jours-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `demandes-30-jours-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -231,16 +261,6 @@ export async function fetchBlockers(): Promise<Blocker[]> {
   return (data ?? []) as Blocker[];
 }
 
-export async function fetchResolvedBlockers(): Promise<Blocker[]> {
-  const { data, error } = await db
-    .from("blockers")
-    .select("*")
-    .eq("status", "RÉSOLU")
-    .order("updated_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as Blocker[];
-}
-
 export type ValidatedSubmission = Submission & { validated_at: string | null };
 
 /** Demandes validées, toutes équipes (filtrées par les règles d'accès de la base). */
@@ -254,26 +274,14 @@ export async function fetchValidatedSubmissions(): Promise<ValidatedSubmission[]
   const rows = (data ?? []) as Submission[];
   const dates = new Map<string, string>();
   if (rows.length) {
-    // L'historique peut ne pas être lisible pour tous : dans ce cas, date de soumission.
-    const { data: hist } = await db
-      .from("submission_status_history")
-      .select("submission_id, changed_at")
-      .eq("new_status", "validée")
-      .in("submission_id", rows.map((r) => r.id))
-      .order("changed_at", { ascending: false });
-    for (const h of hist ?? []) if (!dates.has(h.submission_id)) dates.set(h.submission_id, h.changed_at);
+    // La date de validation vient d'une fonction qui ne renvoie que cette date (l'historique lui-même
+    // n'est plus lisible pour les demandes des autres équipes). Sans date : date de soumission.
+    const { data: validations } = await db.rpc("dates_validation_demandes");
+    for (const v of validations ?? []) dates.set(v.submission_id, v.validated_at);
   }
   return rows
     .map((r) => ({ ...r, validated_at: dates.get(r.id) ?? null }))
     .sort((a, b) => (b.validated_at ?? b.created_at).localeCompare(a.validated_at ?? a.created_at));
-}
-
-export async function updateBlockerStatus(input: { id: string; status: string }) {
-  const { error } = await db
-    .from("blockers")
-    .update({ status: input.status as Enums["blocker_status"], updated_at: new Date().toISOString() })
-    .eq("id", input.id);
-  if (error) throw error;
 }
 
 export async function fetchMetrics(): Promise<Metric[]> {
@@ -326,6 +334,8 @@ export type MetricInput = {
   label: string;
   value: number;
   unit: string | null;
+  scope: "entreprise" | "individuel";
+  definition: string | null;
 };
 
 export async function fetchAllNews(): Promise<News[]> {

@@ -23,17 +23,12 @@ const ROLES: { value: AppRole; label: string; description: string }[] = [
   {
     value: "collaborateur",
     label: "Collaborateur",
-    description: "Je lis les actualités et les indicateurs, et je remonte des idées, questions ou problèmes à mon équipe.",
+    description: "Je lis les actualités et les indicateurs, je fais des demandes et je signale des problèmes à mon équipe.",
   },
   {
     value: "manager",
     label: "Manager",
     description: "Je valide ou refuse les demandes de mon équipe, je rédige des actualités et je suis les points bloquants.",
-  },
-  {
-    value: "admin",
-    label: "Admin",
-    description: "Je gère tout : contenus, indicateurs, équipes et utilisateurs.",
   },
 ];
 
@@ -44,6 +39,7 @@ function ChoisirRolePage() {
   const [role, setRole] = useState<AppRole>("collaborateur");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [team, setTeam] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -56,7 +52,7 @@ function ChoisirRolePage() {
         const [{ data: teamRows, error: teamErr }, own, existingRole] = await Promise.all([
           supabase.from("teams").select("name").eq("is_reserved", false).order("name"),
           email
-            ? supabase.from("allowed_users").select("id, first_name, last_name, team").eq("email", email.toLowerCase()).maybeSingle()
+            ? supabase.from("allowed_users").select("id, first_name, last_name, team, contact_email").eq("email", email.toLowerCase()).maybeSingle()
             : Promise.resolve({ data: null }),
           email ? fetchOwnRole(email) : Promise.resolve(null),
         ]);
@@ -65,6 +61,7 @@ function ChoisirRolePage() {
         if (own.data) {
           setFirstName(own.data.first_name ?? "");
           setLastName(own.data.last_name ?? "");
+          setContactEmail(own.data.contact_email ?? "");
           let currentTeam = own.data.team ?? "";
           if (existingRole === "manager") {
             const { data: mt } = await supabase.from("manager_teams").select("team").eq("allowed_user_id", own.data.id).limit(1);
@@ -91,6 +88,10 @@ function ChoisirRolePage() {
       setError("Renseigne ton prénom et ton nom.");
       return;
     }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail.trim())) {
+      setError("Renseigne une adresse e-mail valide pour recevoir ton résumé.");
+      return;
+    }
     if (role !== "admin" && !team) {
       setError("Choisis une équipe.");
       return;
@@ -105,6 +106,15 @@ function ChoisirRolePage() {
     if (err) {
       setBusy(false);
       setError(err.message);
+      return;
+    }
+    // Adresse où recevoir le résumé hebdomadaire (le profil existe maintenant)
+    const { error: mailErr } = await supabase.rpc("definir_mon_email_contact", {
+      _email: contactEmail.trim(),
+    });
+    if (mailErr) {
+      setBusy(false);
+      setError(mailErr.message);
       return;
     }
     // La base vient éventuellement d'attribuer une adresse interne au compte :
@@ -154,6 +164,22 @@ function ChoisirRolePage() {
                 </label>
               </div>
 
+              <label className={labelCls}>
+                Adresse e-mail
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  maxLength={200}
+                  autoComplete="email"
+                  aria-describedby="aide-email"
+                  className={inputCls}
+                />
+                <span id="aide-email" className="mt-xs block normal-case font-body-sm text-body-sm text-on-surface-variant">
+                  Pour recevoir ton résumé de la semaine.
+                </span>
+              </label>
+
               <fieldset className="space-y-xs">
                 <legend className={labelCls}>Rôle</legend>
                 {ROLES.map((r) => (
@@ -201,9 +227,9 @@ function ChoisirRolePage() {
 
           <div className="mt-sm flex flex-wrap items-center justify-between gap-xs font-body-sm text-body-sm text-on-surface-variant">
             <span>Ton rôle est gardé dans ce navigateur.</span>
-            <button type="button" onClick={signOut} className="text-primary underline-offset-2 hover:underline">
+            <Button type="button" variant="link" size="sm" onClick={signOut}>
               Recommencer avec un nouveau profil
-            </button>
+            </Button>
           </div>
         </section>
       </main>

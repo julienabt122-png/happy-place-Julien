@@ -1,8 +1,9 @@
-import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BrandHeader } from "@/components/brand-header";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { processAttachmentDeletionQueue } from "@/lib/dashboard";
 
 export const Route = createFileRoute("/_authenticated/manage")({
@@ -12,12 +13,13 @@ export const Route = createFileRoute("/_authenticated/manage")({
       {
         name: "description",
         content:
-          "Gérer les actualités du cabinet, les propositions internes, les alertes sur les recrutements et les indicateurs de performance.",
+          "Gérer les actualités du cabinet, les demandes internes, les alertes sur les recrutements et les indicateurs de performance.",
       },
       { property: "og:title", content: "Gestion des données — Happy Place" },
       {
         property: "og:description",
-        content: "Gestion de l'activité d'un cabinet de recrutement spécialisé dans l'IT et le digital.",
+        content:
+          "Gestion de l'activité d'un cabinet de recrutement spécialisé dans l'IT et le digital.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -29,16 +31,18 @@ export const Route = createFileRoute("/_authenticated/manage")({
   component: ManageLayout,
 });
 
-const tabs = [
-  { to: "/manage/news", label: "ACTUALITÉS" },
-  { to: "/manage/submissions", label: "SOUMISSIONS" },
-  { to: "/manage/blockers", label: "POINTS BLOQUANTS" },
-  { to: "/manage/metrics", label: "INDICATEURS" },
-  { to: "/manage/users", label: "UTILISATEURS AUTORISÉS" },
+// Anciennes pages de gestion (la page Actualités a rejoint /actualites) : plus listées dans le menu Gestion (les pages de module les remplacent),
+// mais toujours joignables par leur adresse tant que les pages de module n'ont pas leurs suppressions.
+const legacyPages = [
+  { to: "/manage/submissions", title: "Demandes" },
+  { to: "/manage/blockers", title: "Points bloquants" },
+  { to: "/manage/metrics", title: "Indicateurs" },
 ] as const;
 
 function ManageLayout() {
   const qc = useQueryClient();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const legacy = legacyPages.find((t) => pathname.startsWith(t.to));
   // Suppression silencieuse des pièces jointes échues, une fois par chargement de /manage
   useEffect(() => {
     processAttachmentDeletionQueue()
@@ -50,39 +54,22 @@ function ManageLayout() {
       .finally(() => qc.invalidateQueries({ queryKey: ["attachment_deletion_queue"] }));
   }, [qc]);
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen">
-      <BrandHeader />
-      <main className="w-full max-w-interface mx-auto p-sm md:p-md space-y-md">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-sm">
-          <div className="space-y-1">
-            <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
-              Gestion des données
-            </p>
-            <h1 className="font-headline-lg text-headline-lg text-primary">Gestion des données</h1>
-          </div>
-          <Link
-            to="/"
-            className="px-md py-xs border border-outline bg-surface text-primary font-label-md text-label-md hover:bg-surface-container"
-          >
-            ← RETOUR À LA VUE D'ENSEMBLE
-          </Link>
-        </div>
-
-        <nav className="flex flex-wrap gap-xs border-b border-outline-variant pb-sm">
-          {tabs.map((t) => (
-            <Link
-              key={t.to}
-              to={t.to}
-              className="px-md py-xs border border-outline-variant font-label-md text-label-md text-on-surface-variant hover:bg-surface-container"
-              activeProps={{ className: "bg-primary text-on-primary border-primary" }}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
+    <div className="font-body-md">
+      <div className="space-y-md">
+        {/* Le nom « Gestion » est dans le bandeau de l'AppShell : pas de fil d'Ariane en double dans le contenu. */}
+        {legacy && (
+          <PageHeader
+            title={legacy.title}
+            actions={
+              <Button asChild variant="outline">
+                <Link to="/">Retour à la vue d'ensemble</Link>
+              </Button>
+            }
+          />
+        )}
 
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 }

@@ -2,16 +2,32 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Linkify } from "@/components/linkify";
 import { formatExactDate } from "@/components/expandable-card";
 import { NewsImage, NewsLinks } from "@/components/news-media";
+import { Button } from "@/components/ui/button";
 import type { News } from "@/lib/dashboard";
+import { useReturnFocus } from "@/lib/use-return-focus";
 
 /** Fenêtre de lecture d'une actualité publiée (lecture seule, Échap, clic fond). */
-export function NewsReader({ news: n, onClose }: { news: News | null; onClose: () => void }) {
+export function NewsReader({
+  news: n,
+  onClose,
+  onEdit,
+  onDelete,
+}: {
+  news: News | null;
+  onClose: () => void;
+  /** Bouton « Modifier » (admin, ou manager auteur) : fourni seulement si l'utilisateur a le droit. */
+  onEdit?: (n: News) => void;
+  /** Bouton « Supprimer » (admin seulement) : fourni seulement si l'utilisateur a le droit. */
+  onDelete?: (n: News) => void;
+}) {
+  const returnFocus = useReturnFocus(!!n);
   return (
     <DialogPrimitive.Root open={!!n} onOpenChange={(o) => !o && onClose()}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         {n && (
           <DialogPrimitive.Content
+            onCloseAutoFocus={returnFocus}
             className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none"
           >
             <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">
@@ -20,15 +36,47 @@ export function NewsReader({ news: n, onClose }: { news: News | null; onClose: (
                   {n.title}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="font-label-sm text-label-sm text-on-surface-variant">
-                  Publiée le {formatExactDate(n.created_at)} • Par {n.author}
+                  {n.status === "brouillon" ? "Brouillon créé" : "Publiée"} le{" "}
+                  {formatExactDate(n.created_at)} • Par {n.author}
                 </DialogPrimitive.Description>
               </div>
-              <DialogPrimitive.Close
-                aria-label="Fermer"
-                className="text-on-surface-variant hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <span aria-hidden="true" className="material-symbols-outlined">close</span>
-              </DialogPrimitive.Close>
+              <div className="flex shrink-0 items-center gap-2">
+                {onEdit && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-label={`Modifier : ${n.title}`}
+                    onClick={() => onEdit(n)}
+                    className="px-3.5"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+                      edit
+                    </span>{" "}
+                    Modifier
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-label={`Supprimer l'actualité ${n.title}`}
+                    onClick={() => onDelete(n)}
+                    className="px-3.5"
+                  >
+                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+                      delete
+                    </span>{" "}
+                    Supprimer
+                  </Button>
+                )}
+                <DialogPrimitive.Close asChild>
+                  <Button type="button" variant="ghost" size="icon" aria-label="Fermer">
+                    <span aria-hidden="true" className="material-symbols-outlined">
+                      close
+                    </span>
+                  </Button>
+                </DialogPrimitive.Close>
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-md space-y-md">
               {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}

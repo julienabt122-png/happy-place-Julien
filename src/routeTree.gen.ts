@@ -14,12 +14,16 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChoisirRoleRouteImport } from './routes/choisir-role'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedActualitesRouteImport } from './routes/_authenticated/actualites'
+import { Route as AuthenticatedDemandesRouteImport } from './routes/_authenticated/demandes'
+import { Route as AuthenticatedIndicateursRouteImport } from './routes/_authenticated/indicateurs'
 import { Route as AuthenticatedManageRouteImport } from './routes/_authenticated/manage'
+import { Route as AuthenticatedPointsBloquantsRouteImport } from './routes/_authenticated/points-bloquants'
 import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenticated/manage.index'
 import { Route as AuthenticatedManageBlockersRouteImport } from './routes/_authenticated/manage.blockers'
 import { Route as AuthenticatedManageMetricsRouteImport } from './routes/_authenticated/manage.metrics'
-import { Route as AuthenticatedManageNewsRouteImport } from './routes/_authenticated/manage.news'
 import { Route as AuthenticatedManageSubmissionsRouteImport } from './routes/_authenticated/manage.submissions'
+import { Route as AuthenticatedManageTeamsRouteImport } from './routes/_authenticated/manage.teams'
 import { Route as AuthenticatedManageUsersRouteImport } from './routes/_authenticated/manage.users'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -46,11 +50,33 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedActualitesRoute = AuthenticatedActualitesRouteImport.update({
+  id: '/actualites',
+  path: '/actualites',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDemandesRoute = AuthenticatedDemandesRouteImport.update({
+  id: '/demandes',
+  path: '/demandes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedIndicateursRoute =
+  AuthenticatedIndicateursRouteImport.update({
+    id: '/indicateurs',
+    path: '/indicateurs',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManageRoute = AuthenticatedManageRouteImport.update({
   id: '/manage',
   path: '/manage',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPointsBloquantsRoute =
+  AuthenticatedPointsBloquantsRouteImport.update({
+    id: '/points-bloquants',
+    path: '/points-bloquants',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedManageIndexRoute =
   AuthenticatedManageIndexRouteImport.update({
     id: '/',
@@ -69,15 +95,16 @@ const AuthenticatedManageMetricsRoute =
     path: '/metrics',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
-const AuthenticatedManageNewsRoute = AuthenticatedManageNewsRouteImport.update({
-  id: '/news',
-  path: '/news',
-  getParentRoute: () => AuthenticatedManageRoute,
-} as any)
 const AuthenticatedManageSubmissionsRoute =
   AuthenticatedManageSubmissionsRouteImport.update({
     id: '/submissions',
     path: '/submissions',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageTeamsRoute =
+  AuthenticatedManageTeamsRouteImport.update({
+    id: '/teams',
+    path: '/teams',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
 const AuthenticatedManageUsersRoute =
@@ -92,11 +119,15 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/choisir-role': typeof ChoisirRoleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/actualites': typeof AuthenticatedActualitesRoute
+  '/demandes': typeof AuthenticatedDemandesRoute
+  '/indicateurs': typeof AuthenticatedIndicateursRoute
   '/manage': typeof AuthenticatedManageRouteWithChildren
+  '/points-bloquants': typeof AuthenticatedPointsBloquantsRoute
   '/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
-  '/manage/news': typeof AuthenticatedManageNewsRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
+  '/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
   '/manage/': typeof AuthenticatedManageIndexRoute
 }
@@ -104,11 +135,15 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/choisir-role': typeof ChoisirRoleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/actualites': typeof AuthenticatedActualitesRoute
+  '/demandes': typeof AuthenticatedDemandesRoute
+  '/indicateurs': typeof AuthenticatedIndicateursRoute
+  '/points-bloquants': typeof AuthenticatedPointsBloquantsRoute
   '/': typeof AuthenticatedIndexRoute
   '/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
-  '/manage/news': typeof AuthenticatedManageNewsRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
+  '/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
   '/manage': typeof AuthenticatedManageIndexRoute
 }
@@ -118,12 +153,16 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/choisir-role': typeof ChoisirRoleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/actualites': typeof AuthenticatedActualitesRoute
+  '/_authenticated/demandes': typeof AuthenticatedDemandesRoute
+  '/_authenticated/indicateurs': typeof AuthenticatedIndicateursRoute
   '/_authenticated/manage': typeof AuthenticatedManageRouteWithChildren
+  '/_authenticated/points-bloquants': typeof AuthenticatedPointsBloquantsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/_authenticated/manage/metrics': typeof AuthenticatedManageMetricsRoute
-  '/_authenticated/manage/news': typeof AuthenticatedManageNewsRoute
   '/_authenticated/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
+  '/_authenticated/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/_authenticated/manage/users': typeof AuthenticatedManageUsersRoute
   '/_authenticated/manage/': typeof AuthenticatedManageIndexRoute
 }
@@ -134,11 +173,15 @@ export interface FileRouteTypes {
     | '/auth'
     | '/choisir-role'
     | '/sitemap.xml'
+    | '/actualites'
+    | '/demandes'
+    | '/indicateurs'
     | '/manage'
+    | '/points-bloquants'
     | '/manage/blockers'
     | '/manage/metrics'
-    | '/manage/news'
     | '/manage/submissions'
+    | '/manage/teams'
     | '/manage/users'
     | '/manage/'
   fileRoutesByTo: FileRoutesByTo
@@ -146,11 +189,15 @@ export interface FileRouteTypes {
     | '/auth'
     | '/choisir-role'
     | '/sitemap.xml'
+    | '/actualites'
+    | '/demandes'
+    | '/indicateurs'
+    | '/points-bloquants'
     | '/'
     | '/manage/blockers'
     | '/manage/metrics'
-    | '/manage/news'
     | '/manage/submissions'
+    | '/manage/teams'
     | '/manage/users'
     | '/manage'
   id:
@@ -159,12 +206,16 @@ export interface FileRouteTypes {
     | '/auth'
     | '/choisir-role'
     | '/sitemap.xml'
+    | '/_authenticated/actualites'
+    | '/_authenticated/demandes'
+    | '/_authenticated/indicateurs'
     | '/_authenticated/manage'
+    | '/_authenticated/points-bloquants'
     | '/_authenticated/'
     | '/_authenticated/manage/blockers'
     | '/_authenticated/manage/metrics'
-    | '/_authenticated/manage/news'
     | '/_authenticated/manage/submissions'
+    | '/_authenticated/manage/teams'
     | '/_authenticated/manage/users'
     | '/_authenticated/manage/'
   fileRoutesById: FileRoutesById
@@ -213,11 +264,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/actualites': {
+      id: '/_authenticated/actualites'
+      path: '/actualites'
+      fullPath: '/actualites'
+      preLoaderRoute: typeof AuthenticatedActualitesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/demandes': {
+      id: '/_authenticated/demandes'
+      path: '/demandes'
+      fullPath: '/demandes'
+      preLoaderRoute: typeof AuthenticatedDemandesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/indicateurs': {
+      id: '/_authenticated/indicateurs'
+      path: '/indicateurs'
+      fullPath: '/indicateurs'
+      preLoaderRoute: typeof AuthenticatedIndicateursRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manage': {
       id: '/_authenticated/manage'
       path: '/manage'
       fullPath: '/manage'
       preLoaderRoute: typeof AuthenticatedManageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/points-bloquants': {
+      id: '/_authenticated/points-bloquants'
+      path: '/points-bloquants'
+      fullPath: '/points-bloquants'
+      preLoaderRoute: typeof AuthenticatedPointsBloquantsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manage/': {
@@ -241,18 +320,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageMetricsRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
-    '/_authenticated/manage/news': {
-      id: '/_authenticated/manage/news'
-      path: '/news'
-      fullPath: '/manage/news'
-      preLoaderRoute: typeof AuthenticatedManageNewsRouteImport
-      parentRoute: typeof AuthenticatedManageRoute
-    }
     '/_authenticated/manage/submissions': {
       id: '/_authenticated/manage/submissions'
       path: '/submissions'
       fullPath: '/manage/submissions'
       preLoaderRoute: typeof AuthenticatedManageSubmissionsRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/teams': {
+      id: '/_authenticated/manage/teams'
+      path: '/teams'
+      fullPath: '/manage/teams'
+      preLoaderRoute: typeof AuthenticatedManageTeamsRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
     '/_authenticated/manage/users': {
@@ -268,8 +347,8 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedManageRouteChildren {
   AuthenticatedManageBlockersRoute: typeof AuthenticatedManageBlockersRoute
   AuthenticatedManageMetricsRoute: typeof AuthenticatedManageMetricsRoute
-  AuthenticatedManageNewsRoute: typeof AuthenticatedManageNewsRoute
   AuthenticatedManageSubmissionsRoute: typeof AuthenticatedManageSubmissionsRoute
+  AuthenticatedManageTeamsRoute: typeof AuthenticatedManageTeamsRoute
   AuthenticatedManageUsersRoute: typeof AuthenticatedManageUsersRoute
   AuthenticatedManageIndexRoute: typeof AuthenticatedManageIndexRoute
 }
@@ -277,8 +356,8 @@ interface AuthenticatedManageRouteChildren {
 const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
   AuthenticatedManageBlockersRoute: AuthenticatedManageBlockersRoute,
   AuthenticatedManageMetricsRoute: AuthenticatedManageMetricsRoute,
-  AuthenticatedManageNewsRoute: AuthenticatedManageNewsRoute,
   AuthenticatedManageSubmissionsRoute: AuthenticatedManageSubmissionsRoute,
+  AuthenticatedManageTeamsRoute: AuthenticatedManageTeamsRoute,
   AuthenticatedManageUsersRoute: AuthenticatedManageUsersRoute,
   AuthenticatedManageIndexRoute: AuthenticatedManageIndexRoute,
 }
@@ -287,12 +366,20 @@ const AuthenticatedManageRouteWithChildren =
   AuthenticatedManageRoute._addFileChildren(AuthenticatedManageRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActualitesRoute: typeof AuthenticatedActualitesRoute
+  AuthenticatedDemandesRoute: typeof AuthenticatedDemandesRoute
+  AuthenticatedIndicateursRoute: typeof AuthenticatedIndicateursRoute
   AuthenticatedManageRoute: typeof AuthenticatedManageRouteWithChildren
+  AuthenticatedPointsBloquantsRoute: typeof AuthenticatedPointsBloquantsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActualitesRoute: AuthenticatedActualitesRoute,
+  AuthenticatedDemandesRoute: AuthenticatedDemandesRoute,
+  AuthenticatedIndicateursRoute: AuthenticatedIndicateursRoute,
   AuthenticatedManageRoute: AuthenticatedManageRouteWithChildren,
+  AuthenticatedPointsBloquantsRoute: AuthenticatedPointsBloquantsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 

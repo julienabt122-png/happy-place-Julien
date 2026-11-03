@@ -2,27 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  ConfirmDelete,
-  ErrorSummary,
-  Field,
-  FormActions,
-  Modal,
-  RowActions,
-  TextInput,
-} from "@/components/manage/crud-ui";
-import { metricSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
+import { ConfirmDelete, ManageIcon, RowActions } from "@/components/manage/crud-ui";
 import { MetricHistory } from "@/components/manage/metric-history";
+import { MetricFormDialog } from "@/components/modules/metric-form-dialog";
+import { Button } from "@/components/ui/button";
 import {
-  createMetric,
   deleteMetric,
   fetchMetrics,
   deltaText,
   formatMetricValue,
-  updateMetricRow,
   TREND_LABELS,
   type Metric,
-  type MetricInput,
 } from "@/lib/dashboard";
 
 export const Route = createFileRoute("/_authenticated/manage/metrics")({
@@ -39,66 +29,24 @@ export const Route = createFileRoute("/_authenticated/manage/metrics")({
   component: ManageMetrics,
 });
 
-type FormState = { key: string; label: string; value: string; unit: string };
-
-const empty: FormState = { key: "", label: "", value: "", unit: "" };
-
 function ManageMetrics() {
   const qc = useQueryClient();
-  const [form, setForm] = useState<FormState | null>(null);
-  const [editing, setEditing] = useState<Metric | null>(null);
-  const [errors, setErrors] = useState<FieldErrors>({});
+  // Fenêtre de création (metric: null) ou de modification ; le formulaire est le composant partagé.
+  const [dialog, setDialog] = useState<{ metric: Metric | null } | null>(null);
   const [toDelete, setToDelete] = useState<Metric | null>(null);
 
   const list = useQuery({ queryKey: ["metrics"], queryFn: fetchMetrics, retry: false });
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["metrics"] });
   const onError = (e: unknown) => toast.error((e as Error).message);
-
-  const save = useMutation({
-    mutationFn: (input: MetricInput) =>
-      editing ? updateMetricRow(editing.key, input) : createMetric(input),
-    onSuccess: async () => {
-      toast.success(editing ? "Indicateur modifié" : "Indicateur créé");
-      close();
-      await invalidate();
-    },
-    onError,
-  });
 
   const remove = useMutation({
     mutationFn: (key: string) => deleteMetric(key),
     onSuccess: () => {
       toast.success("Indicateur supprimé");
       setToDelete(null);
-      invalidate();
+      qc.invalidateQueries({ queryKey: ["metrics"] });
     },
     onError,
   });
-
-  function close() {
-    setForm(null);
-    setEditing(null);
-    setErrors({});
-  }
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form) return;
-    const raw = form.value.trim().replace(",", ".");
-    const candidate = {
-      key: form.key,
-      label: form.label,
-      value: raw === "" || Number.isNaN(Number(raw)) ? Number.NaN : Number(raw),
-      unit: form.unit.trim() === "" ? null : form.unit,
-    };
-    const res = validate(metricSchema, candidate);
-    if (!res.ok) {
-      setErrors(res.errors);
-      return;
-    }
-    setErrors({});
-    save.mutate(res.data);
-  }
 
   return (
     <section className="space-y-md">
@@ -106,16 +54,9 @@ function ManageMetrics() {
         <h2 className="font-headline-sm text-headline-sm text-primary">
           Indicateurs ({list.data?.length ?? 0})
         </h2>
-        <button
-          onClick={() => {
-            setEditing(null);
-            setErrors({});
-            setForm({ ...empty });
-          }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
-        >
-          + NOUVEL INDICATEUR
-        </button>
+        <Button type="button" onClick={() => setDialog({ metric: null })}>
+          <ManageIcon name="add" className="text-[18px]" /> Nouvel indicateur
+        </Button>
       </div>
 
       {list.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}
@@ -144,19 +85,7 @@ function ManageMetrics() {
               </p>
               <MetricHistory metricKey={m.key} unit={m.unit} />
             </div>
-            <RowActions
-              onEdit={() => {
-                setEditing(m);
-                setErrors({});
-                setForm({
-                  key: m.key,
-                  label: m.label,
-                  value: String(m.value),
-                  unit: m.unit ?? "",
-                });
-              }}
-              onDelete={() => setToDelete(m)}
-            />
+            <RowActions onEdit={() => setDialog({ metric: m })} onDelete={() => setToDelete(m)} />
           </article>
         ))}
         {list.data?.length === 0 && (
@@ -164,44 +93,8 @@ function ManageMetrics() {
         )}
       </div>
 
-      {form && (
-        <Modal title={editing ? "Modifier l'indicateur" : "Nouvel indicateur"} onClose={close}>
-          <form onSubmit={submit} className="space-y-sm" noValidate>
-            <ErrorSummary errors={errors} />
-            <Field label="Clé technique" error={errors.key}>
-              <TextInput
-                value={form.key}
-                disabled={!!editing}
-                maxLength={40}
-                placeholder="ex : taux_placement"
-                onChange={(e) => setForm({ ...form, key: e.target.value })}
-              />
-            </Field>
-            <Field label="Libellé" error={errors.label}>
-              <TextInput
-                value={form.label}
-                maxLength={60}
-                onChange={(e) => setForm({ ...form, label: e.target.value })}
-              />
-            </Field>
-            <Field label="Valeur" error={errors.value}>
-              <TextInput
-                value={form.value}
-                inputMode="decimal"
-                onChange={(e) => setForm({ ...form, value: e.target.value })}
-              />
-            </Field>
-            <Field label="Unité (optionnel)" error={errors.unit}>
-              <TextInput
-                value={form.unit}
-                maxLength={8}
-                placeholder="%"
-                onChange={(e) => setForm({ ...form, unit: e.target.value })}
-              />
-            </Field>
-            <FormActions pending={save.isPending} onCancel={close} />
-          </form>
-        </Modal>
+      {dialog && (
+        <MetricFormDialog metric={dialog.metric} open onOpenChange={(o) => !o && setDialog(null)} />
       )}
 
       {toDelete && (

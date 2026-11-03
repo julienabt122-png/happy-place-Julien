@@ -52,27 +52,36 @@ export type Database = {
           departure_date: string | null
           email: string
           first_name: string | null
+          home_metric_keys: string[] | null
           id: string
           last_name: string | null
           team: string | null
+          welcome_seen_at: string | null
+          contact_email: string | null
         }
         Insert: {
           created_at?: string
           departure_date?: string | null
           email: string
           first_name?: string | null
+          home_metric_keys?: string[] | null
           id?: string
           last_name?: string | null
           team?: string | null
+          welcome_seen_at?: string | null
+          contact_email?: string | null
         }
         Update: {
           created_at?: string
           departure_date?: string | null
           email?: string
           first_name?: string | null
+          home_metric_keys?: string[] | null
           id?: string
           last_name?: string | null
           team?: string | null
+          welcome_seen_at?: string | null
+          contact_email?: string | null
         }
         Relationships: [
           {
@@ -221,22 +230,28 @@ export type Database = {
       }
       metrics: {
         Row: {
+          definition: string | null
           key: string
           label: string
+          scope: string
           unit: string | null
           updated_at: string
           value: number
         }
         Insert: {
+          definition?: string | null
           key: string
           label: string
+          scope?: string
           unit?: string | null
           updated_at?: string
           value: number
         }
         Update: {
+          definition?: string | null
           key?: string
           label?: string
+          scope?: string
           unit?: string | null
           updated_at?: string
           value?: number
@@ -437,10 +452,12 @@ export type Database = {
     Views: {
       metrics_with_trend: {
         Row: {
+          definition: string | null
           delta: number | null
           key: string | null
           label: string | null
           previous_value: number | null
+          scope: string | null
           trend: string | null
           unit: string | null
           updated_at: string | null
@@ -450,6 +467,17 @@ export type Database = {
       }
     }
     Functions: {
+      dates_validation_demandes: {
+        Args: Record<PropertyKey, never>
+        Returns: { submission_id: string; validated_at: string }[]
+      }
+      definir_mes_indicateurs: { Args: { _keys: string[] }; Returns: string[] }
+      marquer_accueil_vu: { Args: Record<PropertyKey, never>; Returns: string }
+      definir_mon_email_contact: { Args: { _email: string }; Returns: string }
+      qui_tranche_ma_demande: {
+        Args: Record<PropertyKey, never>
+        Returns: { first_name: string | null; last_name: string | null; role: string }[]
+      }
       choisir_mon_role: {
         Args: {
           _first_name: string

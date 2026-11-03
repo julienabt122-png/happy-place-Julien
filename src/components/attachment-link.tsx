@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadAttachment } from "@/lib/dashboard";
 
@@ -38,15 +39,16 @@ export function AttachmentLink({ path, name }: { path?: string | null; name?: st
         <span aria-hidden="true" className="material-symbols-outlined text-sm">picture_as_pdf</span>
         <span className="truncate">{label}</span>
       </a>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={`Télécharger ${label}`}
         title="Télécharger"
         onClick={() => downloadAttachment(path, name ?? null).catch((e) => toast.error((e as Error).message))}
-        className="inline-flex items-center text-on-surface-variant hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <span aria-hidden="true" className="material-symbols-outlined text-sm">download</span>
-      </button>
+      </Button>
     </span>
   );
 }
