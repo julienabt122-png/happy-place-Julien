@@ -37,6 +37,9 @@ function messageLisible(message: string): string {
   if (/password/i.test(message) && /least|6|caract/i.test(message)) {
     return "Le mot de passe doit contenir au moins 8 caractères.";
   }
+  if (/email rate limit exceeded/i.test(message)) {
+    return "Trop de mails de confirmation ont été envoyés aujourd'hui. Attends 1 h, ou contacte ton admin.";
+  }
   // Supabase remplace le message du trigger par ce texte générique : on ne peut pas dire si l'adresse est listée.
   if (/database error saving new user/i.test(message)) {
     return "Impossible de créer ton accès avec cette adresse. Si elle n'est pas dans la liste des personnes autorisées, demande à un admin de t'ajouter, puis reviens ici.";
