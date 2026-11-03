@@ -168,6 +168,7 @@ export function DemandesCard({
             {data.submissions.isError && (
               <p className="text-body-sm text-error">Les demandes sont indisponibles.</p>
             )}
+            <SectionHeader title="À traiter" count={data.toReview.length} />
             {data.submissions.data && data.toReview.length === 0 && (
               <EmptyState bare message="Rien à traiter pour le moment." />
             )}
@@ -214,6 +215,43 @@ export function DemandesCard({
                 </div>
               </ClickableRow>
             ))}
+            <div className="mt-2 flex flex-col gap-2.5">
+              <SectionHeader title="Mes dernières décisions" count={data.arbitrated.length} />
+              {data.myDecisions.isError && (
+                <p className="text-body-sm text-error">Tes décisions sont indisponibles.</p>
+              )}
+              {data.myDecisions.data && data.arbitrated.length === 0 && (
+                <div className="w-full rounded-[4px] border border-outline-variant bg-background p-4 text-sm text-on-surface-variant">
+                  Tu n'as encore rendu aucune décision.
+                </div>
+              )}
+              {data.arbitrated.slice(0, PREVIEW).map(({ s, decidedAt }) => (
+                <ClickableRow key={s.id} className="p-4">
+                  <RowMainButton
+                    label={`demande de ${s.author_name} ${STATUS_LABELS[s.status]?.toLowerCase() ?? s.status}, ${excerpt(s.content)}`}
+                    onOpen={() => setReading(s)}
+                    className="flex w-full flex-col gap-2"
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 text-sm">
+                        <span className="font-semibold text-foreground">{s.author_name}</span>{" "}
+                        <span className="text-on-surface-variant">· {s.team}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <StatusTag status={s.status} />
+                        <RowChevron />
+                      </span>
+                    </span>
+                    <span className="line-clamp-2 text-sm text-primary wrap-anywhere">
+                      {s.content}
+                    </span>
+                    <span className="font-label-sm text-xs text-on-surface-variant">
+                      Décidée le {formatDate(decidedAt)}
+                    </span>
+                  </RowMainButton>
+                </ClickableRow>
+              ))}
+            </div>
           </TabsContent>
         )}
 
