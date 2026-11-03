@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { BrandHeader } from "@/components/brand-header";
 import { Button } from "@/components/ui/button";
 
-// Version élèves : entrée directe, sans email ni mot de passe.
-// Une session anonyme Supabase est ouverte automatiquement, puis l'écran
-// /choisir-role permet de choisir son rôle. Le navigateur garde la session :
-// on retrouve son rôle à la visite suivante.
+// US-50 : connexion avec Google uniquement.
+// Plus de session anonyme : sans adresse Google vérifiée, personne n'entre.
+// Une fois connecté, l'écran /choisir-role ne sert qu'à choisir collaborateur ou manager ;
+// le rôle admin est attribué par un admin dans la gestion.
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -23,33 +23,37 @@ export const Route = createFileRoute("/auth")({
 function EntreePage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const [checking, setChecking] = useState(true);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setError(null);
       const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
       if (data.session) {
         navigate({ to: "/" });
         return;
       }
-      const { error: err } = await supabase.auth.signInAnonymously();
-      if (cancelled) return;
-      if (err) {
-        setError(
-          /anonymous/i.test(err.message) && /disabled|not enabled/i.test(err.message)
-            ? "Les connexions anonymes ne sont pas activées dans Supabase. Active « Allow anonymous sign-ins » (voir le README, étape 2), puis réessaie."
-            : `Impossible d'ouvrir Happy Place : ${err.message}`,
-        );
-        return;
-      }
-      navigate({ to: "/choisir-role" });
+      setChecking(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [navigate, attempt]);
+  }, [navigate]);
+
+  async function connecter() {
+    setError(null);
+    setBusy(true);
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth` },
+    });
+    if (err) {
+      setBusy(false);
+      setError(`Impossible de lancer la connexion Google : ${err.message}`);
+    }
+  }
 
   return (
     <div className="min-h-dvh w-full bg-background flex flex-col">
@@ -57,22 +61,28 @@ function EntreePage() {
       <main className="flex flex-1 items-center justify-center px-md py-lg">
         <section className="w-[min(100%,28rem)] border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
           <h1 className="font-headline-lg text-headline-lg text-primary">Happy Place</h1>
-          {error ? (
+          {checking ? (
+            <p className="mt-sm font-body-md text-body-md text-on-surface-variant" role="status">
+              Vérification de ta session…
+            </p>
+          ) : (
             <>
-              <p className="mt-md border border-error bg-error-container p-sm font-body-sm text-on-error-container" role="alert">
-                {error}
+              <p className="mt-sm font-body-md text-body-md text-on-surface-variant">
+                Connecte-toi avec ton compte Google professionnel.
               </p>
+              {error && (
+                <p className="mt-md border border-error bg-error-container p-sm font-body-sm text-on-error-container" role="alert">
+                  {error}
+                </p>
+              )}
               <Button
-                onClick={() => setAttempt((n) => n + 1)}
+                onClick={connecter}
+                disabled={busy}
                 className="mt-md h-12 w-full rounded-none font-label-md text-xs uppercase text-on-primary"
               >
-                RÉESSAYER
+                {busy ? "Redirection…" : "Se connecter avec Google"}
               </Button>
             </>
-          ) : (
-            <p className="mt-sm font-body-md text-body-md text-on-surface-variant" role="status">
-              Ouverture de ton espace…
-            </p>
           )}
         </section>
       </main>
