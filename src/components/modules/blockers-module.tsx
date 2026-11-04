@@ -12,7 +12,7 @@ import { ModerationDialog } from "@/components/modules/moderation-dialog";
 import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
-import { useTableSort } from "@/lib/table-sort";
+import { dateValue, useTableSort } from "@/lib/table-sort";
 import { fetchAllBlockers, type Blocker } from "@/lib/dashboard";
 import { masquerElement, reafficherElement, supprimerDefinitivement } from "@/lib/moderation";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
@@ -103,10 +103,15 @@ export function BlockersModule({ role }: { role: AppRole }) {
         (b.description ?? "").toLowerCase().includes(needle) ||
         b.department.toLowerCase().includes(needle)),
   );
-  const sort = useTableSort(filtered, {
-    titre: (b) => b.title,
-    gravite: (b) => (SEVERITY_RANK[b.severity] ?? 9) * 10 + (STATUS_RANK[b.status] ?? 9),
-  });
+  const sort = useTableSort(
+    filtered,
+    {
+      titre: (b) => b.title,
+      gravite: (b) => (SEVERITY_RANK[b.severity] ?? 9) * 10 + (STATUS_RANK[b.status] ?? 9),
+      date: (b) => dateValue(b.created_at ?? b.updated_at),
+    },
+    ["date"],
+  );
   const shown = sort.rows.slice(0, limit);
 
   function changeFilter(next: StatusFilter) {
@@ -117,6 +122,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
   const columns: DataColumn[] = [
     { label: "Point bloquant", sortKey: "titre" },
     { label: "Criticité et statut", className: "w-[176px]", sortKey: "gravite" },
+    { label: "Date", className: "w-[144px]", sortKey: "date" },
     ...(isAdmin ? [{ label: "Actions", className: "w-[256px] text-right" }] : []),
   ];
 
@@ -239,7 +245,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
                       {b.title}
                     </h3>
                     <div className="mb-1.5 font-label-sm text-xs text-on-surface-variant">
-                      {b.department} · {longDate(b.created_at ?? b.updated_at)}
+                      {b.department}
                     </div>
                     {b.description && (
                       <p className="mb-2 line-clamp-1 text-sm leading-relaxed text-on-surface-variant wrap-anywhere">
@@ -264,6 +270,11 @@ export function BlockersModule({ role }: { role: AppRole }) {
                     <SeverityTag severity={b.severity} />
                     <BlockerStatusTag status={b.status} />
                   </div>
+                </Td>
+                <Td>
+                  <span className="font-label-sm text-xs font-medium text-on-surface-variant">
+                    {longDate(b.created_at ?? b.updated_at)}
+                  </span>
                 </Td>
                 {isAdmin && (
                   <Td className="text-right">

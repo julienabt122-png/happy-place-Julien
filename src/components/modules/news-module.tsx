@@ -124,11 +124,15 @@ export function NewsModule({
           (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         )
       : filtered;
-  const sort = useTableSort(ordered, {
-    titre: (n) => n.title,
-    statut: (n) => n.status,
-    date: (n) => dateValue(n.created_at),
-  });
+  const sort = useTableSort(
+    ordered,
+    {
+      titre: (n) => n.title,
+      statut: (n) => n.status,
+      date: (n) => dateValue(n.created_at),
+    },
+    ["date"],
+  );
   const shown = sort.rows.slice(0, limit);
 
   function changeFilter(next: StatusFilter) {

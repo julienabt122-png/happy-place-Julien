@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { AttachmentLink } from "@/components/attachment-link";
-import { ListFooter } from "@/components/data-table";
+import { DataTable, ListFooter, Td, Tr, type DataColumn } from "@/components/data-table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
 import { FilterBar, FilterChips, FilterSelect, SearchField } from "@/components/filter-bar";
 import { Linkify } from "@/components/linkify";
@@ -24,6 +24,7 @@ import type { AppRole } from "@/lib/auth";
 import { fetchAllSubmissions, type Submission } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { plural } from "@/lib/plural";
+import { dateValue, useTableSort } from "@/lib/table-sort";
 import { useDeciders, useDecisions } from "@/lib/use-submission-tracking";
 
 type StatusFilter = "all" | "pending" | "validated" | "refused";
@@ -74,7 +75,23 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
         s.team.toLowerCase().includes(needle) ||
         s.content.toLowerCase().includes(needle)),
   );
-  const shown = filtered.slice(0, limit);
+  const sort = useTableSort(
+    filtered,
+    {
+      demande: (s) => s.author_name,
+      statut: (s) => s.status,
+      date: (s) => dateValue(s.created_at),
+    },
+    ["date"],
+  );
+  const shown = sort.rows.slice(0, limit);
+
+  const columns: DataColumn[] = [
+    { label: "Demande", sortKey: "demande" },
+    { label: "Statut", className: "w-[144px]", sortKey: "statut" },
+    { label: "Date", className: "w-[144px]", sortKey: "date" },
+    ...(canReview ? [{ label: "Actions", className: "w-[224px] text-right" }] : []),
+  ];
 
   // Suivi de MES demandes affichées : une requête pour le décideur, une lecture d'historique
   // limitée aux identifiants de mes propres demandes déjà décidées.
@@ -212,93 +229,109 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
           <EmptyState message="Aucune demande ne correspond à ces filtres." />
         )}
         {shown.length > 0 && (
-          <ul className="divide-y divide-outline-variant">
+          <DataTable
+            label="Liste des demandes"
+            columns={columns}
+            sort={sort.sort}
+            onSort={sort.onSort}
+          >
             {shown.map((s) => (
-              <li key={s.id} className="flex items-start justify-between gap-6 p-6">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1.5 flex flex-wrap items-baseline gap-2">
-                    <span className="text-base font-semibold text-primary wrap-anywhere">
-                      {s.author_name}
-                    </span>
-                    <span className="font-label-sm text-xs font-medium text-on-surface-variant">
-                      {s.team} ·{" "}
-                      {new Date(s.created_at).toLocaleDateString("fr-FR", { dateStyle: "long" })}
-                    </span>
+              <Tr key={s.id}>
+                <Td>
+                  <div className="min-w-0">
+                    <div className="mb-1.5 flex flex-wrap items-baseline gap-2">
+                      <span className="text-base font-semibold text-primary wrap-anywhere">
+                        {s.author_name}
+                      </span>
+                      <span className="font-label-sm text-xs font-medium text-on-surface-variant">
+                        {s.team}
+                      </span>
+                    </div>
+                    <p className="mb-1.5 line-clamp-3 whitespace-pre-line text-base leading-relaxed text-foreground wrap-anywhere">
+                      <Linkify text={s.content} />
+                    </p>
+                    <div className="mb-1.5 space-y-0.5">
+                      <SubmissionTracking
+                        s={s}
+                        mine={isMine(s)}
+                        deciders={deciders.data}
+                        decision={decisionHistory.data?.[s.id]}
+                      />
+                    </div>
+                    <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      aria-haspopup="dialog"
+                      aria-label={`Voir le détail : demande de ${s.author_name}`}
+                      onClick={() => setReading(s)}
+                      className="-ml-3"
+                    >
+                      Voir le détail
+                    </Button>
                   </div>
-                  <p className="mb-1.5 line-clamp-3 whitespace-pre-line text-base leading-relaxed text-foreground wrap-anywhere">
-                    <Linkify text={s.content} />
-                  </p>
-                  <div className="mb-1.5 space-y-0.5">
-                    <SubmissionTracking
-                      s={s}
-                      mine={isMine(s)}
-                      deciders={deciders.data}
-                      decision={decisionHistory.data?.[s.id]}
-                    />
-                  </div>
-                  <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    aria-haspopup="dialog"
-                    aria-label={`Voir le détail : demande de ${s.author_name}`}
-                    onClick={() => setReading(s)}
-                    className="-ml-3"
-                  >
-                    Voir le détail
-                  </Button>
-                </div>
-                <div className="w-[120px] shrink-0 pt-0.5">
+                </Td>
+                <Td>
                   <StatusTag status={s.status} />
-                </div>
+                </Td>
+                <Td>
+                  <span className="font-label-sm text-xs font-medium text-on-surface-variant">
+                    {new Date(s.created_at).toLocaleDateString("fr-FR", { dateStyle: "long" })}
+                  </span>
+                </Td>
                 {canReview && (
-                  <div className="flex w-[176px] shrink-0 flex-wrap items-center justify-end gap-2 pt-0.5">
-                    {canModerate(s) && (
-                      <>
+                  <Td>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {canModerate(s) && (
+                        <>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => startReject(s)}
+                            className="px-3.5"
+                          >
+                            Refuser
+                          </Button>
+                          <Button
+                            type="button"
+                            disabled={review.isPending}
+                            onClick={() => review.mutate({ id: s.id, status: "validée" })}
+                            className="px-3.5"
+                          >
+                            Valider
+                          </Button>
+                        </>
+                      )}
+                      {isAdmin && (
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => startReject(s)}
+                          aria-haspopup="dialog"
+                          aria-label={
+                            s.masque_le
+                              ? `Supprimer définitivement la demande de ${s.author_name}`
+                              : `Masquer la demande de ${s.author_name}`
+                          }
+                          disabled={deleteSubmissionAction.pending}
+                          onClick={(e) => deleteSubmissionAction.request(s, e.currentTarget)}
                           className="px-3.5"
                         >
-                          Refuser
+                          <span
+                            aria-hidden="true"
+                            className="material-symbols-outlined text-[18px]"
+                          >
+                            {s.masque_le ? "delete" : "visibility_off"}
+                          </span>{" "}
+                          {s.masque_le ? "Supprimer" : "Masquer"}
                         </Button>
-                        <Button
-                          type="button"
-                          disabled={review.isPending}
-                          onClick={() => review.mutate({ id: s.id, status: "validée" })}
-                          className="px-3.5"
-                        >
-                          Valider
-                        </Button>
-                      </>
-                    )}
-                    {isAdmin && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        aria-haspopup="dialog"
-                        aria-label={
-                          s.masque_le
-                            ? `Supprimer définitivement la demande de ${s.author_name}`
-                            : `Masquer la demande de ${s.author_name}`
-                        }
-                        disabled={deleteSubmissionAction.pending}
-                        onClick={(e) => deleteSubmissionAction.request(s, e.currentTarget)}
-                        className="px-3.5"
-                      >
-                        <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-                          {s.masque_le ? "delete" : "visibility_off"}
-                        </span>{" "}
-                        {s.masque_le ? "Supprimer" : "Masquer"}
-                      </Button>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  </Td>
                 )}
-              </li>
+              </Tr>
             ))}
-          </ul>
+          </DataTable>
         )}
       </ModuleCard>
 
