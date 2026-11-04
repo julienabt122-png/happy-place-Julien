@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ConfirmDialog } from "@/components/modules/confirm-dialog";
-import { deleteSubmission, type Submission } from "@/lib/dashboard";
+import { ModerationDialog } from "@/components/modules/moderation-dialog";
+import type { Submission } from "@/lib/dashboard";
+import { masquerElement, reafficherElement, supprimerDefinitivement } from "@/lib/moderation";
 
 /**
- * Suppression d'une demande par l'admin, avec confirmation. Même suppression que l'ancienne page
- * /manage/submissions : l'historique part avec la demande (cascade) et la pièce jointe est mise en
- * file de suppression par la base. Le bouton n'est proposé qu'à l'admin ; la politique
- * « Admins manage submissions » fait foi. `request(s, opener)` ouvre la confirmation.
+ * Modération d'une demande (admin) : une demande visible est d'abord masquée ; une demande masquée
+ * peut être supprimée définitivement (son historique et sa pièce jointe partent) ou réaffichée.
+ * `request(s, opener)` ouvre la fenêtre ; le focus revient à `opener` à la fermeture.
  */
 export function useDeleteSubmission(): {
   pending: boolean;
@@ -18,38 +18,48 @@ export function useDeleteSubmission(): {
   const qc = useQueryClient();
   const [target, setTarget] = useState<Submission | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  // Préfixe commun : liste, accueil, « Mes demandes », validées, décideur et décisions.
+  const rafraichir = () => qc.invalidateQueries({ queryKey: ["submissions"] });
 
-  const remove = useMutation({
-    mutationFn: (s: Submission) => deleteSubmission(s.id),
-    onSuccess: () => {
-      toast.success("Demande supprimée");
-      // Préfixe commun : liste, accueil, « Mes demandes », validées, décideur et décisions.
-      qc.invalidateQueries({ queryKey: ["submissions"] });
+  const action = useMutation({
+    mutationFn: ({ s, motif }: { s: Submission; motif: string }) =>
+      s.masque_le
+        ? supprimerDefinitivement("demande", s.id, motif)
+        : masquerElement("demande", s.id, motif),
+    onSuccess: (_r, { s }) => {
+      toast.success(s.masque_le ? "Demande supprimée" : "Demande masquée");
+      rafraichir();
     },
-    onError: () => toast.error("Impossible de supprimer cette demande. Réessaie dans un instant."),
+    onError: (e) => toast.error((e as Error).message),
+    onSettled: () => setTarget(null),
+  });
+
+  const reafficher = useMutation({
+    mutationFn: (s: Submission) => reafficherElement("demande", s.id),
+    onSuccess: () => {
+      toast.success("Demande réaffichée");
+      rafraichir();
+    },
+    onError: (e) => toast.error((e as Error).message),
     onSettled: () => setTarget(null),
   });
 
   return {
-    pending: remove.isPending,
+    pending: action.isPending || reafficher.isPending,
     request: (s, opener) => {
       if (opener) openerRef.current = opener;
       setTarget(s);
     },
     confirmDialog: (
-      <ConfirmDialog
+      <ModerationDialog
         open={!!target}
-        onOpenChange={(o) => !o && !remove.isPending && setTarget(null)}
-        title="Supprimer cette demande ?"
-        message={
-          target
-            ? `La demande de ${target.author_name} sera supprimée pour tout le monde, avec son historique de décisions${target.attachment_path ? " et sa pièce jointe" : ""}. Cette action est définitive.`
-            : ""
-        }
-        confirmLabel="Supprimer"
-        pending={remove.isPending}
+        onOpenChange={(o) => !o && !action.isPending && setTarget(null)}
+        mode={target?.masque_le ? "supprimer" : "masquer"}
+        titre={target ? `Demande de ${target.author_name}` : ""}
+        pending={action.isPending || reafficher.isPending}
+        onConfirm={(motif) => target && action.mutate({ s: target, motif })}
+        onReafficher={target?.masque_le ? () => target && reafficher.mutate(target) : undefined}
         returnFocusRef={openerRef}
-        onConfirm={() => target && remove.mutate(target)}
       />
     ),
   };

@@ -124,6 +124,12 @@ export async function addUser(v: {
   return data.id as string;
 }
 
+// Coupure immédiate (US-45) : supprime la ligne de la liste blanche, avec rôle et équipes managées.
+export async function couperAcces(allowedUserId: string) {
+  const { error } = await supabase.rpc("couper_acces", { _allowed_user_id: allowedUserId });
+  if (error) throw new Error(error.message);
+}
+
 export async function updateRoleAndTeam(v: { id: string; role: AppRole; team?: string }) {
   if (v.role === "collaborateur") {
     const parsed = teamSchema.safeParse(v.team ?? "");

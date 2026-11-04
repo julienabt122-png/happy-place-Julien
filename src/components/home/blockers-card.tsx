@@ -1,9 +1,10 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { ClickableRow, RowChevron, RowMainButton } from "@/components/clickable-row";
 import { EmptyState } from "@/components/empty-state";
 import { ModuleCard } from "@/components/module-card";
 import { BlockerFormDialog } from "@/components/modules/blocker-form-dialog";
+import { BlockerReader } from "@/components/modules/blocker-reader";
 import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
@@ -20,7 +21,8 @@ export function BlockersCard({
   role: AppRole;
   blockers: UseQueryResult<Blocker[]>;
 }) {
-  const navigate = useNavigate();
+  // Un clic sur un point ouvre sa fiche de lecture ; la page de gestion reste accessible par le menu et « Voir tout ».
+  const [lu, setLu] = useState<Blocker | null>(null);
   return (
     <ModuleCard
       id="points-bloquants"
@@ -58,9 +60,8 @@ export function BlockersCard({
             className="px-3.5 py-3"
           >
             <RowMainButton
-              kind="page"
-              label={`point bloquant, ${b.title}`}
-              onOpen={() => void navigate({ to: "/points-bloquants" })}
+              label={`voir le point bloquant, ${b.title}`}
+              onOpen={() => setLu(b)}
               className="flex w-full items-center justify-between gap-4"
             >
               <span className="min-w-0 truncate text-sm font-medium text-primary">{b.title}</span>
@@ -73,6 +74,7 @@ export function BlockersCard({
           </ClickableRow>
         ))}
       </div>
+      <BlockerReader blocker={lu} onClose={() => setLu(null)} />
     </ModuleCard>
   );
 }

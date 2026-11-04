@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Field, Select, TextInput } from "@/components/manage/crud-ui";
 import {
   addManagerTeam,
+  couperAcces,
   formatDay,
   longDate,
   minDepartureDate,
@@ -121,6 +122,23 @@ function EditForm({
       setErr((e as Error).message);
       refresh();
     } finally {
+      setPending(false);
+    }
+  }
+
+  async function couperMaintenant() {
+    const ok = window.confirm(
+      `Couper l'accès de ${userDisplayName(u)} maintenant ? Ses droits disparaissent tout de suite. Cette action ne peut pas être annulée : pour le revoir, il faudra le réajouter.`,
+    );
+    if (!ok) return;
+    setPending(true);
+    try {
+      await couperAcces(u.id);
+      toast.success("Accès coupé");
+      refresh();
+      onDone();
+    } catch (e) {
+      setErr((e as Error).message);
       setPending(false);
     }
   }
@@ -262,6 +280,11 @@ function EditForm({
           {!isMe && (
             <Button type="button" variant="link" disabled={pending} onClick={() => onRetire(u)}>
               Retirer l'accès
+            </Button>
+          )}
+          {!isMe && (
+            <Button type="button" variant="link" disabled={pending} onClick={couperMaintenant}>
+              Couper l'accès maintenant
             </Button>
           )}
           {u.departure_date && (

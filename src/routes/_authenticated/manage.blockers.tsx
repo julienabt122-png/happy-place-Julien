@@ -2,19 +2,25 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ConfirmDelete, ManageIcon, RowActions } from "@/components/manage/crud-ui";
+import { ManageIcon, RowActions } from "@/components/manage/crud-ui";
 import { BlockerFormDialog } from "@/components/modules/blocker-form-dialog";
 import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
-import { deleteBlocker, fetchAllBlockers, timeAgo, type Blocker } from "@/lib/dashboard";
+import { fetchAllBlockers, timeAgo, type Blocker } from "@/lib/dashboard";
 
 export const Route = createFileRoute("/_authenticated/manage/blockers")({
   head: () => ({
     meta: [
       { title: "Gestion des points bloquants — Happy Place" },
-      { name: "description", content: "Créez, modifiez et supprimez les points bloquants dans Happy Place." },
+      {
+        name: "description",
+        content: "Créez, modifiez et supprimez les points bloquants dans Happy Place.",
+      },
       { property: "og:title", content: "Gestion des points bloquants — Happy Place" },
-      { property: "og:description", content: "Gérez les alertes opérationnelles des missions de recrutement dans Happy Place." },
+      {
+        property: "og:description",
+        content: "Gérez les alertes opérationnelles des missions de recrutement dans Happy Place.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -26,20 +32,9 @@ function ManageBlockers() {
   const qc = useQueryClient();
   // Fenêtre de création (blocker: null) ou de modification ; le formulaire est le composant partagé.
   const [dialog, setDialog] = useState<{ blocker: Blocker | null } | null>(null);
-  const [toDelete, setToDelete] = useState<Blocker | null>(null);
 
   const list = useQuery({ queryKey: ["blockers", "all"], queryFn: fetchAllBlockers, retry: false });
   const onError = (e: unknown) => toast.error((e as Error).message);
-
-  const remove = useMutation({
-    mutationFn: (id: string) => deleteBlocker(id),
-    onSuccess: () => {
-      toast.success("Point bloquant supprimé");
-      setToDelete(null);
-      qc.invalidateQueries({ queryKey: ["blockers"] });
-    },
-    onError,
-  });
 
   return (
     <section className="space-y-md">
@@ -74,7 +69,7 @@ function ManageBlockers() {
                 </span>
               </div>
             </div>
-            <RowActions onEdit={() => setDialog({ blocker: b })} onDelete={() => setToDelete(b)} />
+            <RowActions onEdit={() => setDialog({ blocker: b })} />
           </article>
         ))}
         {list.data?.length === 0 && (
@@ -87,15 +82,6 @@ function ManageBlockers() {
           blocker={dialog.blocker}
           open
           onOpenChange={(o) => !o && setDialog(null)}
-        />
-      )}
-
-      {toDelete && (
-        <ConfirmDelete
-          label={toDelete.title}
-          pending={remove.isPending}
-          onCancel={() => setToDelete(null)}
-          onConfirm={() => remove.mutate(toDelete.id)}
         />
       )}
     </section>

@@ -1,12 +1,12 @@
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Linkify } from "@/components/linkify";
 import { formatExactDate } from "@/components/expandable-card";
 import { NewsImage, NewsLinks } from "@/components/news-media";
+import { ReaderDialog } from "@/components/modules/reader-dialog";
+import { InfoTag, NewsStatusTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { News } from "@/lib/dashboard";
-import { useReturnFocus } from "@/lib/use-return-focus";
 
-/** Fenêtre de lecture d'une actualité publiée (lecture seule, Échap, clic fond). */
+/** Fenêtre de lecture d'une actualité (lecture seule), sur le gabarit commun des lecteurs. */
 export function NewsReader({
   news: n,
   onClose,
@@ -17,79 +17,68 @@ export function NewsReader({
   onClose: () => void;
   /** Bouton « Modifier » (admin, ou manager auteur) : fourni seulement si l'utilisateur a le droit. */
   onEdit?: (n: News) => void;
-  /** Bouton « Supprimer » (admin seulement) : fourni seulement si l'utilisateur a le droit. */
+  /** Bouton « Masquer » / « Supprimer » (admin seulement) : fourni seulement si l'utilisateur a le droit. */
   onDelete?: (n: News) => void;
 }) {
-  const returnFocus = useReturnFocus(!!n);
   return (
-    <DialogPrimitive.Root open={!!n} onOpenChange={(o) => !o && onClose()}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        {n && (
-          <DialogPrimitive.Content
-            onCloseAutoFocus={returnFocus}
-            className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none"
-          >
-            <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">
-              <div className="min-w-0">
-                <DialogPrimitive.Title className="font-headline-sm text-headline-sm text-primary wrap-anywhere">
-                  {n.title}
-                </DialogPrimitive.Title>
-                <DialogPrimitive.Description className="font-label-sm text-label-sm text-on-surface-variant">
-                  {n.status === "brouillon" ? "Brouillon créé" : "Publiée"} le{" "}
-                  {formatExactDate(n.created_at)} • Par {n.author}
-                </DialogPrimitive.Description>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {onEdit && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    aria-label={`Modifier : ${n.title}`}
-                    onClick={() => onEdit(n)}
-                    className="px-3.5"
-                  >
-                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-                      edit
-                    </span>{" "}
-                    Modifier
-                  </Button>
-                )}
-                {onDelete && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    aria-label={`Supprimer l'actualité ${n.title}`}
-                    onClick={() => onDelete(n)}
-                    className="px-3.5"
-                  >
-                    <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-                      delete
-                    </span>{" "}
-                    Supprimer
-                  </Button>
-                )}
-                <DialogPrimitive.Close asChild>
-                  <Button type="button" variant="ghost" size="icon" aria-label="Fermer">
-                    <span aria-hidden="true" className="material-symbols-outlined">
-                      close
-                    </span>
-                  </Button>
-                </DialogPrimitive.Close>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-md space-y-md">
-              {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}
-              {n.body && (
-                <p className="font-body-md text-body-md text-on-surface whitespace-pre-line wrap-anywhere">
-                  <Linkify text={n.body} />
-                </p>
-              )}
-              <NewsLinks links={n.links} />
-            </div>
-          </DialogPrimitive.Content>
-        )}
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+    <ReaderDialog
+      open={!!n}
+      onClose={onClose}
+      title={n?.title ?? ""}
+      description="Détail de l'actualité."
+      tags={
+        n && (
+          <>
+            <NewsStatusTag status={n.status} />
+            {n.masque_le && <InfoTag>Masquée</InfoTag>}
+          </>
+        )
+      }
+      meta={n && `Par ${n.author} · ${formatExactDate(n.created_at)}`}
+      actions={
+        n && (onEdit || onDelete) ? (
+          <>
+            {onEdit && (
+              <Button
+                type="button"
+                variant="outline"
+                aria-label={`Modifier : ${n.title}`}
+                onClick={() => onEdit(n)}
+              >
+                <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+                  edit
+                </span>{" "}
+                Modifier
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                type="button"
+                variant="outline"
+                aria-label={
+                  n.masque_le
+                    ? `Supprimer définitivement l'actualité ${n.title}`
+                    : `Masquer l'actualité ${n.title}`
+                }
+                onClick={() => onDelete(n)}
+              >
+                <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
+                  {n.masque_le ? "delete" : "visibility_off"}
+                </span>{" "}
+                {n.masque_le ? "Supprimer" : "Masquer"}
+              </Button>
+            )}
+          </>
+        ) : undefined
+      }
+    >
+      {n?.image_path && <NewsImage path={n.image_path} alt={n.title} />}
+      {n?.body && (
+        <p className="whitespace-pre-line text-base leading-relaxed text-foreground wrap-anywhere">
+          <Linkify text={n.body} />
+        </p>
+      )}
+      {n && <NewsLinks links={n.links} />}
+    </ReaderDialog>
   );
 }
