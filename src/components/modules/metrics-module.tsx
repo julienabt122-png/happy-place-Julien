@@ -9,6 +9,7 @@ import { MetricFormDialog } from "@/components/modules/metric-form-dialog";
 import { useDeleteMetric } from "@/components/modules/use-delete-metric";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
+import { dateValue, useTableSort } from "@/lib/table-sort";
 import { fetchMetrics, formatMetricValue, trendSentence, type Metric } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { isMetricStale } from "@/lib/metric-stale";
@@ -42,14 +43,19 @@ export function MetricsModule({ role }: { role: AppRole }) {
   const deleteMetricAction = useDeleteMetric();
   const metrics = useQuery({ queryKey: ["metrics"], queryFn: fetchMetrics, retry: false });
   const all = metrics.data ?? [];
-  const shown = all.slice(0, limit);
+  const sort = useTableSort(all, {
+    nom: (m) => metricLabel(m, m.label),
+    perimetre: (m) => m.scope,
+    date: (m) => dateValue(m.updated_at),
+  });
+  const shown = sort.rows.slice(0, limit);
   const staleCount = all.filter((m) => isMetricStale(m.updated_at)).length;
 
   const columns: DataColumn[] = [
-    { label: "Indicateur" },
-    { label: "Périmètre", className: "w-[140px]" },
+    { label: "Indicateur", sortKey: "nom" },
+    { label: "Périmètre", className: "w-[140px]", sortKey: "perimetre" },
     { label: "Valeur", className: "w-[184px]" },
-    { label: "Mise à jour", className: "w-[176px]" },
+    { label: "Mise à jour", className: "w-[176px]", sortKey: "date" },
     ...(isAdmin ? [{ label: "Actions", className: "w-[136px] text-right" }] : []),
   ];
 
@@ -116,7 +122,12 @@ export function MetricsModule({ role }: { role: AppRole }) {
           />
         )}
         {all.length > 0 && (
-          <DataTable label="Liste des indicateurs" columns={columns}>
+          <DataTable
+            label="Liste des indicateurs"
+            columns={columns}
+            sort={sort.sort}
+            onSort={sort.onSort}
+          >
             {shown.map((m) => {
               const label = metricLabel(m, m.label);
               return (

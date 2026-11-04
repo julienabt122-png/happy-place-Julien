@@ -25,14 +25,15 @@ import { PageHeader, SummaryLink } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { plural } from "@/lib/plural";
+import { dateValue, useTableSort } from "@/lib/table-sort";
 
 type ManagerFilter = "all" | "without" | "with";
 
 const COLUMNS: DataColumn[] = [
-  { label: "Équipe" },
+  { label: "Équipe", sortKey: "nom" },
   { label: "Managers", className: "w-[260px]" },
-  { label: "Membres", className: "w-[140px]" },
-  { label: "Créée le", className: "w-[160px]" },
+  { label: "Membres", className: "w-[140px]", sortKey: "membres" },
+  { label: "Créée le", className: "w-[160px]", sortKey: "date" },
   { label: "Actions", className: "w-[260px] text-right" },
 ];
 
@@ -77,7 +78,12 @@ export function TeamsModule() {
         (filter === "without" ? withoutManager(t) : !t.is_reserved && !withoutManager(t))) &&
       (!needle || t.name.toLowerCase().includes(needle)),
   );
-  const shown = filtered.slice(0, limit);
+  const sort = useTableSort(filtered, {
+    nom: (t) => t.name,
+    membres: (t) => membersOf(t.name),
+    date: (t) => dateValue(t.created_at),
+  });
+  const shown = sort.rows.slice(0, limit);
   const loading = teams.isLoading || users.isLoading;
   const failed = teams.isError || users.isError;
 
@@ -186,7 +192,12 @@ export function TeamsModule() {
           <EmptyState message="Aucune équipe ne correspond à ces filtres." />
         )}
         {shown.length > 0 && users.data && (
-          <DataTable label="Liste des équipes" columns={COLUMNS}>
+          <DataTable
+            label="Liste des équipes"
+            columns={COLUMNS}
+            sort={sort.sort}
+            onSort={sort.onSort}
+          >
             {shown.map((t) => {
               const managers = managersOf(t.name);
               return (

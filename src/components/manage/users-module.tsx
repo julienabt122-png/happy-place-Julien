@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { countAttachmentDeletionQueue, processAttachmentDeletionQueue } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { plural } from "@/lib/plural";
+import { dateValue, useTableSort } from "@/lib/table-sort";
 
 type RoleFilter = "all" | AppRole;
 
@@ -40,10 +41,10 @@ const ROLE_ICONS: Record<AppRole, string> = {
 };
 
 const COLUMNS: DataColumn[] = [
-  { label: "Utilisateur" },
-  { label: "Rôle", className: "w-[180px]" },
-  { label: "Équipe", className: "w-[200px]" },
-  { label: "Ajouté le", className: "w-[160px]" },
+  { label: "Utilisateur", sortKey: "nom" },
+  { label: "Rôle", className: "w-[180px]", sortKey: "role" },
+  { label: "Équipe", className: "w-[200px]", sortKey: "equipe" },
+  { label: "Ajouté le", className: "w-[160px]", sortKey: "date" },
   { label: "Actions", className: "w-[300px] text-right" },
 ];
 
@@ -82,7 +83,13 @@ export function UsersModule({ me }: { me: string }) {
         userDisplayName(u).toLowerCase().includes(needle) ||
         u.email.toLowerCase().includes(needle)),
   );
-  const shown = filtered.slice(0, limit);
+  const sort = useTableSort(filtered, {
+    nom: (u) => userDisplayName(u),
+    role: (u) => ROLE_LABELS[u.role],
+    equipe: (u) => (u.role === "collaborateur" ? u.team : u.teams.join(", ")),
+    date: (u) => dateValue(u.created_at),
+  });
+  const shown = sort.rows.slice(0, limit);
   const minDeparture = minDepartureDate();
 
   const queue = useQuery({
@@ -244,7 +251,12 @@ export function UsersModule({ me }: { me: string }) {
           <EmptyState message="Aucun utilisateur ne correspond à ces filtres." />
         )}
         {shown.length > 0 && (
-          <DataTable label="Liste des utilisateurs" columns={COLUMNS}>
+          <DataTable
+            label="Liste des utilisateurs"
+            columns={COLUMNS}
+            sort={sort.sort}
+            onSort={sort.onSort}
+          >
             {shown.map((u) => {
               const name = userDisplayName(u);
               const isMe = u.email === me;
