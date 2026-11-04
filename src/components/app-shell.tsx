@@ -4,6 +4,7 @@ import { BrandHeader } from "@/components/brand-header";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { profileFullName, useMyProfile } from "@/components/modules/use-my-profile";
 import { Button } from "@/components/ui/button";
+import { IconTip } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,19 +119,21 @@ export function AppShell({
 
       <header className="z-20 flex h-16 w-full shrink-0 items-center justify-between border-b border-outline-variant bg-card">
         <div className="flex h-full min-w-0 flex-1 items-center">
-          <Button
-            ref={menuButtonRef}
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-            aria-expanded={menuOpen}
-            aria-controls="menu-principal"
-            onClick={() => setMenuOpen((o) => !o)}
-            className="ml-3 shrink-0 border-outline-variant bg-card hover:bg-hover-gris md:hidden"
-          >
-            <Icon name={menuOpen ? "close" : "menu"} />
-          </Button>
+          <IconTip label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}>
+            <Button
+              ref={menuButtonRef}
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={menuOpen}
+              aria-controls="menu-principal"
+              onClick={() => setMenuOpen((o) => !o)}
+              className="ml-3 shrink-0 border-outline-variant bg-card hover:bg-hover-gris md:hidden"
+            >
+              <Icon name={menuOpen ? "close" : "menu"} />
+            </Button>
+          </IconTip>
           <BrandHeader variant="identity" />
           {pathname.replace(/\/$/, "") === "" ? (
             // Accueil : « Accueil » en fil d'Ariane (maquettes d'accueil).
@@ -199,17 +202,19 @@ export function AppShell({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label="Aide"
-            aria-haspopup="dialog"
-            onClick={() => setWelcomeOpen(true)}
-            className="border-outline-variant bg-card hover:bg-hover-gris"
-          >
-            <Icon name="help_outline" />
-          </Button>
+          <IconTip label="Aide">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Aide"
+              aria-haspopup="dialog"
+              onClick={() => setWelcomeOpen(true)}
+              className="border-outline-variant bg-card hover:bg-hover-gris"
+            >
+              <Icon name="help_outline" />
+            </Button>
+          </IconTip>
         </div>
       </header>
 

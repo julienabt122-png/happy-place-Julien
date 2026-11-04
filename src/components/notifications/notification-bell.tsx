@@ -1,3 +1,4 @@
+import { IconTip } from "@/components/ui/tooltip";
 import { useQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
@@ -44,26 +45,28 @@ export function NotificationBell({ role, email }: { role: AppRole; email: string
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            ref={bellRef}
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label={label}
-            className="relative border-outline-variant bg-card hover:bg-hover-gris data-[state=open]:rounded-b-none data-[state=open]:border-b-0 data-[state=open]:border-primary data-[state=open]:bg-card"
-          >
-            <Icon name="notifications" />
-            {count > 0 && (
-              <span
-                aria-hidden="true"
-                className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border border-primary bg-highlight px-1 font-label-sm text-[11px] font-semibold leading-none text-primary"
-              >
-                {count > 99 ? "99+" : count}
-              </span>
-            )}
-          </Button>
-        </PopoverTrigger>
+        <IconTip label="Notifications">
+          <PopoverTrigger asChild>
+            <Button
+              ref={bellRef}
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={label}
+              className="relative border-outline-variant bg-card hover:bg-hover-gris data-[state=open]:rounded-b-none data-[state=open]:border-b-0 data-[state=open]:border-primary data-[state=open]:bg-card"
+            >
+              <Icon name="notifications" />
+              {count > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full border border-primary bg-highlight px-1 font-label-sm text-[11px] font-semibold leading-none text-primary"
+                >
+                  {count > 99 ? "99+" : count}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+        </IconTip>
         <PopoverContent
           align="end"
           sideOffset={-1}
