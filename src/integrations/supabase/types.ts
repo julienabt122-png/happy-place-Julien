@@ -547,6 +547,10 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      couper_acces: {
+        Args: { _allowed_user_id: string }
+        Returns: undefined
+      }
       masquer_element: {
         Args: { _type: string; _id: string; _motif: string }
         Returns: undefined
