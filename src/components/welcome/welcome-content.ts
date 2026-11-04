@@ -1,7 +1,7 @@
 import type { AppRole } from "@/lib/auth";
 
-/** Adresse provisoire du contact admin (texte des maquettes) : à remplacer par l'adresse réelle. */
-export const ADMIN_CONTACT_EMAIL = "admin@exemple.fr";
+/** Adresse du contact admin affichée dans l'accueil et l'aide (adresse d'admin de Julien, décision du 2026-11-04). */
+export const ADMIN_CONTACT_EMAIL = "julienabt122@gmail.com";
 
 export const ROLE_TAGS: Record<AppRole, string> = {
   admin: "ADMIN",
