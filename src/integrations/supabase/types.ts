@@ -228,6 +228,39 @@ export type Database = {
           },
         ]
       }
+      moderation_journal: {
+        Row: {
+          action: string
+          auteur_email: string
+          created_at: string
+          element_id: string
+          id: string
+          libelle: string | null
+          motif: string | null
+          type_element: string
+        }
+        Insert: {
+          action: string
+          auteur_email: string
+          created_at?: string
+          element_id: string
+          id?: string
+          libelle?: string | null
+          motif?: string | null
+          type_element: string
+        }
+        Update: {
+          action?: string
+          auteur_email?: string
+          created_at?: string
+          element_id?: string
+          id?: string
+          libelle?: string | null
+          motif?: string | null
+          type_element?: string
+        }
+        Relationships: []
+      }
       metrics: {
         Row: {
           definition: string | null
@@ -486,6 +519,18 @@ export type Database = {
           _team?: string | null
         }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      masquer_element: {
+        Args: { _type: string; _id: string; _motif: string }
+        Returns: undefined
+      }
+      reafficher_element: {
+        Args: { _type: string; _id: string }
+        Returns: undefined
+      }
+      supprimer_definitivement: {
+        Args: { _type: string; _id: string; _motif: string }
+        Returns: undefined
       }
       bulk_import_allowed_users: {
         Args: { _dry_run?: boolean; _rows: Json }

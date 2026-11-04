@@ -279,15 +279,19 @@ export function SubmissionsModule({ role, email }: { role: AppRole; email: strin
                         type="button"
                         variant="outline"
                         aria-haspopup="dialog"
-                        aria-label={`Supprimer la demande de ${s.author_name}`}
+                        aria-label={
+                          s.masque_le
+                            ? `Supprimer définitivement la demande de ${s.author_name}`
+                            : `Masquer la demande de ${s.author_name}`
+                        }
                         disabled={deleteSubmissionAction.pending}
                         onClick={(e) => deleteSubmissionAction.request(s, e.currentTarget)}
                         className="px-3.5"
                       >
                         <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-                          delete
+                          {s.masque_le ? "delete" : "visibility_off"}
                         </span>{" "}
-                        Supprimer
+                        {s.masque_le ? "Supprimer" : "Masquer"}
                       </Button>
                     )}
                   </div>

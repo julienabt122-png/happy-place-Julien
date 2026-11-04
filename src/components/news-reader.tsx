@@ -59,14 +59,18 @@ export function NewsReader({
                   <Button
                     type="button"
                     variant="outline"
-                    aria-label={`Supprimer l'actualité ${n.title}`}
+                    aria-label={
+                      n.masque_le
+                        ? `Supprimer définitivement l'actualité ${n.title}`
+                        : `Masquer l'actualité ${n.title}`
+                    }
                     onClick={() => onDelete(n)}
                     className="px-3.5"
                   >
                     <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-                      delete
+                      {n.masque_le ? "delete" : "visibility_off"}
                     </span>{" "}
-                    Supprimer
+                    {n.masque_le ? "Supprimer" : "Masquer"}
                   </Button>
                 )}
                 <DialogPrimitive.Close asChild>

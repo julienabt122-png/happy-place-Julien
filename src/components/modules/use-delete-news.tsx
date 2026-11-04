@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ConfirmDialog } from "@/components/modules/confirm-dialog";
-import { deleteNews, type News } from "@/lib/dashboard";
+import { ModerationDialog } from "@/components/modules/moderation-dialog";
+import type { News } from "@/lib/dashboard";
+import { masquerElement, reafficherElement, supprimerDefinitivement } from "@/lib/moderation";
 
 /**
- * Suppression d'une actualité par l'admin (publiée ou brouillon), avec confirmation. Même suppression
- * que l'ancienne page /manage/news (image jointe retirée, puis ligne supprimée). Le bouton n'est
- * proposé qu'à l'admin ; la politique « Admin write » de la base fait foi.
- * `request(n, opener)` ouvre la confirmation ; le focus revient à `opener` à la fermeture.
+ * Modération d'une actualité (admin) : une actualité visible est d'abord masquée ; une actualité
+ * déjà masquée peut être supprimée définitivement ou réaffichée. Le motif est demandé et journalisé.
+ * `request(n, opener)` ouvre la fenêtre ; le focus revient à `opener` à la fermeture.
  */
 export function useDeleteNews(): {
   pending: boolean;
@@ -18,39 +18,47 @@ export function useDeleteNews(): {
   const qc = useQueryClient();
   const [target, setTarget] = useState<News | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const rafraichir = () => qc.invalidateQueries({ queryKey: ["news"] });
 
-  const remove = useMutation({
-    mutationFn: (n: News) => deleteNews(n.id, n.image_path),
-    onSuccess: () => {
-      toast.success("Actualité supprimée");
-      // Page Actualités et accueil lisent la même liste ["news"].
-      qc.invalidateQueries({ queryKey: ["news"] });
+  const action = useMutation({
+    mutationFn: ({ n, motif }: { n: News; motif: string }) =>
+      n.masque_le
+        ? supprimerDefinitivement("actualite", n.id, motif, n.image_path)
+        : masquerElement("actualite", n.id, motif),
+    onSuccess: (_r, { n }) => {
+      toast.success(n.masque_le ? "Actualité supprimée" : "Actualité masquée");
+      rafraichir();
     },
-    onError: () =>
-      toast.error("Impossible de supprimer cette actualité. Réessaie dans un instant."),
+    onError: (e) => toast.error((e as Error).message),
+    onSettled: () => setTarget(null),
+  });
+
+  const reafficher = useMutation({
+    mutationFn: (n: News) => reafficherElement("actualite", n.id),
+    onSuccess: () => {
+      toast.success("Actualité réaffichée");
+      rafraichir();
+    },
+    onError: (e) => toast.error((e as Error).message),
     onSettled: () => setTarget(null),
   });
 
   return {
-    pending: remove.isPending,
+    pending: action.isPending || reafficher.isPending,
     request: (n, opener) => {
       if (opener) openerRef.current = opener;
       setTarget(n);
     },
     confirmDialog: (
-      <ConfirmDialog
+      <ModerationDialog
         open={!!target}
-        onOpenChange={(o) => !o && !remove.isPending && setTarget(null)}
-        title="Supprimer cette actualité ?"
-        message={
-          target
-            ? `« ${target.title} » sera supprimée pour tout le monde. Cette action est définitive.`
-            : ""
-        }
-        confirmLabel="Supprimer"
-        pending={remove.isPending}
+        onOpenChange={(o) => !o && !action.isPending && setTarget(null)}
+        mode={target?.masque_le ? "supprimer" : "masquer"}
+        titre={target?.title ?? ""}
+        pending={action.isPending || reafficher.isPending}
+        onConfirm={(motif) => target && action.mutate({ n: target, motif })}
+        onReafficher={target?.masque_le ? () => target && reafficher.mutate(target) : undefined}
         returnFocusRef={openerRef}
-        onConfirm={() => target && remove.mutate(target)}
       />
     ),
   };

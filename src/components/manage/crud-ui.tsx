@@ -179,7 +179,8 @@ export function RowActions({
   deleting,
 }: {
   onEdit: () => void;
-  onDelete: () => void;
+  /** Sans cette action, le bouton Supprimer n'est pas affiché (suppression faite ailleurs, par la modération). */
+  onDelete?: () => void;
   deleting?: boolean;
 }) {
   return (
@@ -187,9 +188,11 @@ export function RowActions({
       <Button type="button" variant="outline" size="sm" onClick={onEdit}>
         Modifier
       </Button>
-      <Button type="button" variant="outline" size="sm" onClick={onDelete} disabled={deleting}>
-        Supprimer
-      </Button>
+      {onDelete && (
+        <Button type="button" variant="outline" size="sm" onClick={onDelete} disabled={deleting}>
+          Supprimer
+        </Button>
+      )}
     </div>
   );
 }

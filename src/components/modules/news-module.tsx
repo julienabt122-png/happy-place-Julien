@@ -324,12 +324,20 @@ export function NewsModule({
                               type="button"
                               variant="outline"
                               aria-haspopup="dialog"
-                              aria-label={`Supprimer l'actualité ${n.title}`}
+                              aria-label={
+                                n.masque_le
+                                  ? `Supprimer définitivement l'actualité ${n.title}`
+                                  : `Masquer l'actualité ${n.title}`
+                              }
                               disabled={deleteNewsAction.pending}
                               onClick={(e) => deleteNewsAction.request(n, e.currentTarget)}
                               className="px-3.5"
                             >
-                              <Icon name="delete" className="text-[18px]" /> Supprimer
+                              <Icon
+                                name={n.masque_le ? "delete" : "visibility_off"}
+                                className="text-[18px]"
+                              />{" "}
+                              {n.masque_le ? "Supprimer" : "Masquer"}
                             </Button>
                           )}
                         </div>
