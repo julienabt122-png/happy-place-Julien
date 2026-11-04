@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { ManageTabs } from "@/components/manage/manage-tabs";
+import { PageHeader } from "@/components/page-header";
 import { ModerationDialog } from "@/components/modules/moderation-dialog";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/dashboard";
@@ -125,13 +127,11 @@ export function ModerationModule() {
 
   return (
     <section className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="font-headline-lg text-headline-lg text-primary">Modération</h1>
-        <p className="font-body-md text-on-surface-variant">
-          Éléments masqués : seuls les admins les voient. Tu peux les réafficher, ou les supprimer
-          définitivement. Chaque action est tracée dans le journal.
-        </p>
-      </div>
+      <PageHeader
+        title="Modération"
+        summary="Éléments masqués : seuls les admins les voient. Tu peux les réafficher, ou les supprimer définitivement. Chaque action est tracée dans le journal."
+      />
+      <ManageTabs />
 
       <div className="space-y-3">
         <h2 className="font-label-md text-label-md uppercase text-on-surface-variant">
