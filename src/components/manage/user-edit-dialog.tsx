@@ -7,9 +7,11 @@ import {
   formatDay,
   longDate,
   minDepartureDate,
+  nameSchema,
   removeManagerTeam,
   ROLE_LABELS,
   setDepartureDate,
+  updateNames,
   updateRoleAndTeam,
   useRefreshUsers,
   userDisplayName,
@@ -21,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
 /**
- * Fenêtre « Modifier l'utilisateur » (maquette) : rôle, équipe (collaborateur), équipes managées
+ * Fenêtre « Modifier l'utilisateur » (maquette) : prénom et nom, rôle, équipe (collaborateur), équipes managées
  * (manager) et date de départ. Les écritures sont celles de l'ancienne page, enchaînées à l'enregistrement.
  * « Retirer l'accès » ouvre la confirmation de la page ; « Annuler le départ » reste accessible ici.
  */
@@ -47,7 +49,7 @@ export function UserEditDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="Modifier l'utilisateur"
-      description="Modifie le rôle, l'équipe ou la date de départ de la personne."
+      description="Modifie le nom, le rôle, l'équipe ou la date de départ de la personne."
       returnFocusRef={returnFocusRef}
     >
       {user && (
@@ -79,6 +81,8 @@ function EditForm({
 }) {
   const id = useId();
   const refresh = useRefreshUsers();
+  const [firstName, setFirstName] = useState(u.first_name ?? "");
+  const [lastName, setLastName] = useState(u.last_name ?? "");
   const [role, setRole] = useState<AppRole>(u.role);
   const [team, setTeam] = useState(u.team ?? "");
   const [managed, setManaged] = useState<string[]>(u.teams);
@@ -93,18 +97,33 @@ function EditForm({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+    const fn = nameSchema.safeParse(firstName);
+    if (!fn.success) return setErr("Prénom : " + fn.error.issues[0].message);
+    const ln = nameSchema.safeParse(lastName);
+    if (!ln.success) return setErr("Nom : " + ln.error.issues[0].message);
+    const namesChanged = fn.data !== (u.first_name ?? "") || ln.data !== (u.last_name ?? "");
     const roleChanged = role !== u.role;
     const teamChanged = role === "collaborateur" && team !== (u.team ?? "");
     const toAdd = role === "manager" ? managed.filter((t) => !u.teams.includes(t)) : [];
     const toRemove =
       role === "manager" && !roleChanged ? u.teams.filter((t) => !managed.includes(t)) : [];
     const departureChanged = departure !== (u.departure_date ?? "");
-    if (!roleChanged && !teamChanged && !toAdd.length && !toRemove.length && !departureChanged) {
+    if (
+      !namesChanged &&
+      !roleChanged &&
+      !teamChanged &&
+      !toAdd.length &&
+      !toRemove.length &&
+      !departureChanged
+    ) {
       onDone();
       return;
     }
     setPending(true);
     try {
+      if (namesChanged) {
+        await updateNames({ id: u.id, first_name: fn.data || null, last_name: ln.data || null });
+      }
       if (roleChanged || teamChanged) {
         await updateRoleAndTeam({
           id: u.id,
@@ -167,6 +186,25 @@ function EditForm({
         <p className="font-label-sm text-xs text-on-surface-variant">
           Ajouté le {longDate(u.created_at)}
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <Field label="Prénom (facultatif)" htmlFor={`${id}-prenom`}>
+          <TextInput
+            id={`${id}-prenom`}
+            value={firstName}
+            maxLength={100}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+        </Field>
+        <Field label="Nom (facultatif)" htmlFor={`${id}-nom`}>
+          <TextInput
+            id={`${id}-nom`}
+            value={lastName}
+            maxLength={100}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </Field>
       </div>
 
       <Field label="Rôle (obligatoire)" htmlFor={`${id}-role`}>

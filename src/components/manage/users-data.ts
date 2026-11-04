@@ -167,6 +167,20 @@ export async function updateRoleAndTeam(v: { id: string; role: AppRole; team?: s
   }
 }
 
+export async function updateNames(v: {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+}) {
+  const { data, error } = await supabase
+    .from("allowed_users")
+    .update({ first_name: v.first_name, last_name: v.last_name })
+    .eq("id", v.id)
+    .select("id");
+  if (error) throw error;
+  if (!data?.length) throw new Error("Modification refusée : vérifie que tu es admin");
+}
+
 export async function setDepartureDate(v: { id: string; date: string | null }) {
   const { error } = await supabase
     .from("allowed_users")
