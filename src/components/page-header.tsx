@@ -28,7 +28,7 @@ export function PageHeader({
             <span key={c.label} className="flex items-center gap-1.5">
               <Link
                 to={c.to}
-                className="rounded-sm text-on-surface-variant underline hover:text-primary"
+                className="inline-flex min-h-11 items-center rounded-[4px] px-2 text-on-surface-variant underline hover:bg-[#EFEDED] hover:text-primary"
               >
                 {c.label}
               </Link>

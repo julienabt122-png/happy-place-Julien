@@ -94,7 +94,7 @@ export function NewsCard({
                 <Link
                   to="/actualites"
                   search={{ statut: "brouillons" }}
-                  className="group inline-flex items-center gap-1 text-sm font-semibold text-primary"
+                  className="group -mr-3 inline-flex min-h-11 items-center gap-1 rounded-[4px] px-3 text-sm font-semibold text-primary hover:bg-[#EFEDED]"
                 >
                   <span className="underline decoration-1 underline-offset-4 group-hover:decoration-2">
                     {plural(drafts.length, "brouillon à publier", "brouillons à publier")}
