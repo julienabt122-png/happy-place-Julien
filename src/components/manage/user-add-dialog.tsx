@@ -2,7 +2,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useId, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Field, FormActions, Select, TextInput } from "@/components/manage/crud-ui";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
+  addManagerTeam,
   addUser,
   emailSchema,
   nameSchema,
@@ -38,10 +40,16 @@ function AddForm({ teams, onDone }: { teams: string[]; onDone: () => void }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AppRole>("collaborateur");
   const [team, setTeam] = useState("");
+  const [managed, setManaged] = useState<string[]>([]);
   const [err, setErr] = useState<string | null>(null);
 
   const add = useMutation({
-    mutationFn: addUser,
+    // Crée la personne, puis enregistre ses équipes managées (cas du manager).
+    mutationFn: async (v: Parameters<typeof addUser>[0] & { managed: string[] }) => {
+      const { managed: teamsToManage, ...user } = v;
+      const userId = await addUser(user);
+      for (const t of teamsToManage) await addManagerTeam({ allowedUserId: userId, team: t });
+    },
     onSuccess: () => {
       toast.success("Utilisateur ajouté");
       refresh();
@@ -60,6 +68,9 @@ function AddForm({ teams, onDone }: { teams: string[]; onDone: () => void }) {
       if (!t.success) return setErr("Équipe requise : " + t.error.issues[0].message);
       chosenTeam = t.data;
     }
+    if (role === "manager" && managed.length === 0) {
+      return setErr("Choisis au moins une équipe managée.");
+    }
     const fn = nameSchema.safeParse(firstName);
     if (!fn.success) return setErr("Prénom : " + fn.error.issues[0].message);
     const ln = nameSchema.safeParse(lastName);
@@ -71,6 +82,7 @@ function AddForm({ teams, onDone }: { teams: string[]; onDone: () => void }) {
       team: chosenTeam,
       first_name: fn.data || null,
       last_name: ln.data || null,
+      managed: role === "manager" ? managed : [],
     });
   }
 
@@ -122,6 +134,45 @@ function AddForm({ teams, onDone }: { teams: string[]; onDone: () => void }) {
             ))}
           </Select>
         </Field>
+      )}
+      {role === "manager" && (
+        <fieldset className="space-y-2">
+          <legend className="font-label-md text-[13px] font-medium text-primary">
+            Équipes managées (obligatoire)
+          </legend>
+          <div
+            role="group"
+            aria-label="Sélection des équipes managées"
+            className="max-h-[180px] overflow-y-auto rounded-[4px] border border-outline"
+          >
+            {teams.map((t) => (
+              <label
+                key={t}
+                htmlFor={`${id}-m-${t}`}
+                className="flex min-h-11 cursor-pointer items-center gap-3 px-3 text-sm text-primary hover:bg-secondary"
+              >
+                <Checkbox
+                  id={`${id}-m-${t}`}
+                  checked={managed.includes(t)}
+                  onCheckedChange={(v) =>
+                    setManaged((cur) =>
+                      v === true
+                        ? cur.includes(t)
+                          ? cur
+                          : [...cur, t]
+                        : cur.filter((x) => x !== t),
+                    )
+                  }
+                  className="h-5 w-5 rounded-[4px] shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:ring-0"
+                />
+                <span className="min-w-0 wrap-anywhere">{t}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-sm text-on-surface-variant">
+            Les managers d'une équipe tranchent ses demandes.
+          </p>
+        </fieldset>
       )}
       {err && (
         <p role="alert" className="text-body-sm text-error">
