@@ -184,13 +184,16 @@ export function renderEmail(resume: Dict, intro = "[[INTRO]]", lienAppli: unknow
   // Indicateurs suivis
   const ind = liste(resume.indicateurs);
   if (ind.length) {
-    const corps = ind.slice(0, 3).map((i) => {
+    // Les indicateurs mis à jour cette semaine passent en premier ; on les affiche tous (4 au plus).
+    const tries = [...ind].sort((a, b) => Number(!!b.mis_a_jour_cette_semaine) - Number(!!a.mis_a_jour_cette_semaine));
+    const nbMaj = tries.filter((i) => i.mis_a_jour_cette_semaine).length;
+    const corps = tries.slice(0, 4).map((i) => {
       const u = i.unite ? " " + String(i.unite) : "";
       const avant = i.avant !== null && i.avant !== undefined && i.avant !== i.valeur ? ` (avant : ${nombre(i.avant)}${u})` : "";
       const etat = i.mis_a_jour_cette_semaine ? "" : tag("pas à jour", "neutre");
       return item(etat, `${court(i.libelle, 28)} : ${nombre(i.valeur)}${u}${avant}`);
     }).join("");
-    rangs.push(rang("Vos indicateurs", "mis à jour le " + jourCourt(ind.reduce((a, b) => (String(a.maj) > String(b.maj) ? a : b)).maj), corps));
+    rangs.push(rang("Vos indicateurs", nbMaj ? pluriel(nbMaj, "mis à jour cette semaine", "mis à jour cette semaine") : "aucun indicateur mis à jour cette semaine", corps));
   }
 
   // Toujours ouvert
