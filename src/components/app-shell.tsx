@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BrandHeader } from "@/components/brand-header";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { profileFullName, useMyProfile } from "@/components/modules/use-my-profile";
@@ -76,6 +76,27 @@ export function AppShell({
   const welcomeSeen = useWelcomeSeen(email);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [welcomeAutoShown, setWelcomeAutoShown] = useState(false);
+  // Mobile (moins de 768 px) : le menu est replié derrière un bouton.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Le menu se referme quand on change de page.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Échap referme le menu mobile et rend le focus au bouton.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   // Première arrivée dans le cadre (accueil non encore vu) : la modale s'ouvre une seule fois.
   // AppShell n'enveloppe que les pages connectées : /auth et /choisir-role n'en font pas partie.
@@ -97,10 +118,23 @@ export function AppShell({
 
       <header className="z-20 flex h-16 w-full shrink-0 items-center justify-between border-b border-outline-variant bg-card">
         <div className="flex h-full min-w-0 flex-1 items-center">
+          <Button
+            ref={menuButtonRef}
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={menuOpen}
+            aria-controls="menu-principal"
+            onClick={() => setMenuOpen((o) => !o)}
+            className="ml-3 shrink-0 border-outline-variant bg-card hover:bg-hover-gris md:hidden"
+          >
+            <Icon name={menuOpen ? "close" : "menu"} />
+          </Button>
           <BrandHeader variant="identity" />
           {pathname.replace(/\/$/, "") === "" ? (
             // Accueil : « Accueil » en fil d'Ariane (maquettes d'accueil).
-            <nav aria-label="Fil d'Ariane" className="min-w-0 px-10">
+            <nav aria-label="Fil d'Ariane" className="min-w-0 px-4 md:px-10">
               <ol>
                 <li
                   aria-current="page"
@@ -112,12 +146,12 @@ export function AppShell({
             </nav>
           ) : (
             // Autres pages : le nom de la page seul ; le fil d'Ariane est dans le contenu (PageHeader).
-            <p className="min-w-0 truncate px-10 font-display text-base font-semibold text-primary">
+            <p className="min-w-0 truncate px-4 md:px-10 font-display text-base font-semibold text-primary">
               {pageTitle(pathname)}
             </p>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-4 pr-8">
+        <div className="flex shrink-0 items-center gap-2 pr-3 md:gap-4 md:pr-8">
           {(role === "admin" || role === "manager") && (
             <NotificationBell role={role} email={email} />
           )}
@@ -129,7 +163,9 @@ export function AppShell({
                 className="gap-2.5 border-outline-variant bg-card px-3 hover:bg-hover-gris"
               >
                 <Icon name="person" />
-                <span className="font-body-md text-sm font-medium text-foreground">{profileFullName(profile.data) || profile.data?.contactEmail || email}</span>
+                <span className="font-body-md text-sm font-medium text-foreground">
+                  {profileFullName(profile.data) || profile.data?.contactEmail || email}
+                </span>
                 <span className="rounded-[4px] bg-secondary px-2 py-0.5 font-label-sm text-[11px] leading-tight text-primary">
                   {ROLE_LABELS[role]}
                 </span>
@@ -178,7 +214,10 @@ export function AppShell({
       </header>
 
       <div className="flex w-full flex-1">
-        <aside className="min-h-[calc(100vh-4rem)] w-[240px] shrink-0 border-r border-outline-variant bg-card py-6">
+        <aside
+          id="menu-principal"
+          className={`${menuOpen ? "fixed inset-y-0 left-0 top-16 z-30 block overflow-y-auto" : "hidden"} w-[240px] shrink-0 border-r border-outline-variant bg-card py-6 md:static md:z-auto md:block md:min-h-[calc(100vh-4rem)]`}
+        >
           <nav aria-label="Navigation principale" className="flex flex-col">
             {MAIN_ENTRIES.map((e) => (
               <Link
@@ -215,12 +254,7 @@ export function AppShell({
               <Icon name="help_outline" className="text-primary" />
               Aide
             </Button>
-            <a
-              href={FEEDBACK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={ENTRY_IDLE}
-            >
+            <a href={FEEDBACK_URL} target="_blank" rel="noopener noreferrer" className={ENTRY_IDLE}>
               <Icon name="rate_review" className="text-primary" />
               Donner mon avis sur Happy Place
               <span className="sr-only"> (s'ouvre dans un nouvel onglet)</span>
@@ -231,7 +265,7 @@ export function AppShell({
         <main
           id="contenu"
           tabIndex={-1}
-          className="mx-auto w-full min-w-0 max-w-[1280px] flex-1 p-10 outline-none"
+          className="mx-auto w-full min-w-0 max-w-[1280px] flex-1 p-4 outline-none md:p-10"
         >
           {children}
         </main>
