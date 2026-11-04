@@ -1,5 +1,6 @@
 "use client";
 
+import { IconTip } from "@/components/ui/tooltip";
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -44,10 +45,12 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-[4px] cursor-pointer transition-colors hover:bg-hover-gris disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-        <X className="h-5 w-5" />
-        <span className="sr-only">Fermer</span>
-      </DialogPrimitive.Close>
+      <IconTip label="Fermer">
+        <DialogPrimitive.Close className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-[4px] cursor-pointer transition-colors hover:bg-hover-gris disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <X className="h-5 w-5" />
+          <span className="sr-only">Fermer</span>
+        </DialogPrimitive.Close>
+      </IconTip>
     </DialogPrimitive.Content>
   </DialogPortal>
 ));

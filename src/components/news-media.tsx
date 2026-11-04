@@ -1,3 +1,4 @@
+import { IconTip } from "@/components/ui/tooltip";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,13 +14,36 @@ import {
 } from "@/lib/news-media";
 
 function I({ name, className = "" }: { name: string; className?: string }) {
-  return <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>{name}</span>;
+  return (
+    <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>
+      {name}
+    </span>
+  );
 }
 
-export function NewsImage({ path, alt, className = "" }: { path: string; alt: string; className?: string }) {
-  const q = useQuery({ queryKey: ["news-image", path], queryFn: () => signedNewsImageUrl(path), staleTime: 50 * 60 * 1000, retry: false });
+export function NewsImage({
+  path,
+  alt,
+  className = "",
+}: {
+  path: string;
+  alt: string;
+  className?: string;
+}) {
+  const q = useQuery({
+    queryKey: ["news-image", path],
+    queryFn: () => signedNewsImageUrl(path),
+    staleTime: 50 * 60 * 1000,
+    retry: false,
+  });
   if (!q.data) return null;
-  return <img src={q.data} alt={alt} className={`w-full max-h-60 object-cover border border-outline-variant ${className}`} />;
+  return (
+    <img
+      src={q.data}
+      alt={alt}
+      className={`w-full max-h-60 object-cover border border-outline-variant ${className}`}
+    />
+  );
 }
 
 export function NewsLinks({ links }: { links: unknown }) {
@@ -61,8 +85,16 @@ export function NewsMediaEditor({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [imgError, setImgError] = useState<string | null>(null);
-  const preview = useMemo(() => (value.file ? URL.createObjectURL(value.file) : null), [value.file]);
-  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  const preview = useMemo(
+    () => (value.file ? URL.createObjectURL(value.file) : null),
+    [value.file],
+  );
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
   const showExisting = !value.file && value.existingPath && !value.removeExisting;
   const hasImage = !!value.file || !!showExisting;
   const full = value.links.length >= MAX_NEWS_LINKS;
@@ -83,32 +115,53 @@ export function NewsMediaEditor({
           if (!f) return;
           const err = imageError(f);
           setImgError(err);
-          if (err) { toast.error(err); return; }
+          if (err) {
+            toast.error(err);
+            return;
+          }
           onChange({ ...value, file: f });
         }}
       />
       {hasImage && (
         <div className="space-y-xs">
           {preview ? (
-            <img src={preview} alt={title || "Aperçu de l'image"} className="w-full max-w-xs max-h-40 object-cover border border-outline-variant" />
+            <img
+              src={preview}
+              alt={title || "Aperçu de l'image"}
+              className="w-full max-w-xs max-h-40 object-cover border border-outline-variant"
+            />
           ) : (
-            showExisting && <NewsImage path={value.existingPath!} alt={title || "Image de l'actualité"} className="max-w-xs max-h-40" />
+            showExisting && (
+              <NewsImage
+                path={value.existingPath!}
+                alt={title || "Image de l'actualité"}
+                className="max-w-xs max-h-40"
+              />
+            )
           )}
           <div className="flex gap-sm">
-            <Button type="button" variant="link" size="sm" disabled={disabled} onClick={pick}>Remplacer</Button>
+            <Button type="button" variant="link" size="sm" disabled={disabled} onClick={pick}>
+              Remplacer
+            </Button>
             <Button
               type="button"
               variant="link"
               size="sm"
               disabled={disabled}
-              onClick={() => onChange({ ...value, file: null, removeExisting: !!value.existingPath })}
+              onClick={() =>
+                onChange({ ...value, file: null, removeExisting: !!value.existingPath })
+              }
             >
               Retirer
             </Button>
           </div>
         </div>
       )}
-      {imgError && <p role="alert" className="text-body-sm text-error">{imgError}</p>}
+      {imgError && (
+        <p role="alert" className="text-body-sm text-error">
+          {imgError}
+        </p>
+      )}
 
       {value.links.map((l, i) => (
         <div key={i} className="space-y-1 min-w-0">
@@ -119,7 +172,12 @@ export function NewsMediaEditor({
               maxLength={2000}
               value={l.url}
               disabled={disabled}
-              onChange={(e) => onChange({ ...value, links: value.links.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)) })}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  links: value.links.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)),
+                })
+              }
               className="min-w-0 flex-[2] bg-card border border-outline-variant p-xs font-body-sm focus:outline-none focus:border-primary"
             />
             <div className="flex gap-xs min-w-0 flex-1">
@@ -129,22 +187,37 @@ export function NewsMediaEditor({
                 maxLength={80}
                 value={l.label}
                 disabled={disabled}
-                onChange={(e) => onChange({ ...value, links: value.links.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })}
+                onChange={(e) =>
+                  onChange({
+                    ...value,
+                    links: value.links.map((x, j) =>
+                      j === i ? { ...x, label: e.target.value } : x,
+                    ),
+                  })
+                }
                 className="min-w-0 flex-1 bg-card border border-outline-variant p-xs font-body-sm focus:outline-none focus:border-primary"
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Retirer le lien ${i + 1}`}
-                disabled={disabled}
-                onClick={() => onChange({ ...value, links: value.links.filter((_, j) => j !== i) })}
-              >
-                <I name="close" />
-              </Button>
+              <IconTip label={`Retirer le lien ${i + 1}`}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Retirer le lien ${i + 1}`}
+                  disabled={disabled}
+                  onClick={() =>
+                    onChange({ ...value, links: value.links.filter((_, j) => j !== i) })
+                  }
+                >
+                  <I name="close" />
+                </Button>
+              </IconTip>
             </div>
           </div>
-          {linkErrs[i] && <p role="alert" className="text-body-sm text-error">{linkErrs[i]}</p>}
+          {linkErrs[i] && (
+            <p role="alert" className="text-body-sm text-error">
+              {linkErrs[i]}
+            </p>
+          )}
         </div>
       ))}
 
@@ -161,7 +234,11 @@ export function NewsMediaEditor({
         >
           <I name="link" /> Ajouter un lien
         </Button>
-        {full && <span className="font-label-sm text-label-sm text-on-surface-variant">3 liens maximum</span>}
+        {full && (
+          <span className="font-label-sm text-label-sm text-on-surface-variant">
+            3 liens maximum
+          </span>
+        )}
       </div>
     </div>
   );

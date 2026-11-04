@@ -1,3 +1,4 @@
+import { IconTip } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,19 +37,26 @@ export function AttachmentLink({ path, name }: { path?: string | null; name?: st
         className="inline-flex min-w-0 items-center gap-xs text-primary underline font-label-sm text-label-sm"
         title={`Ouvrir ${label} dans un nouvel onglet`}
       >
-        <span aria-hidden="true" className="material-symbols-outlined text-sm">picture_as_pdf</span>
+        <span aria-hidden="true" className="material-symbols-outlined text-sm">
+          picture_as_pdf
+        </span>
         <span className="truncate">{label}</span>
       </a>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label={`Télécharger ${label}`}
-        title="Télécharger"
-        onClick={() => downloadAttachment(path, name ?? null).catch((e) => toast.error((e as Error).message))}
-      >
-        <span aria-hidden="true" className="material-symbols-outlined text-sm">download</span>
-      </Button>
+      <IconTip label="Télécharger" side="top">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={`Télécharger ${label}`}
+          onClick={() =>
+            downloadAttachment(path, name ?? null).catch((e) => toast.error((e as Error).message))
+          }
+        >
+          <span aria-hidden="true" className="material-symbols-outlined text-sm">
+            download
+          </span>
+        </Button>
+      </IconTip>
     </span>
   );
 }
