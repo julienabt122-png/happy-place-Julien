@@ -24,7 +24,6 @@ import { submissionSchema, validate, type FieldErrors } from "@/lib/manage-schem
 import {
   REJECTION_CATEGORIES,
   createSubmission,
-  deleteSubmission,
   fetchAllSubmissions,
   timeAgo,
   updateSubmission,
@@ -36,9 +35,15 @@ export const Route = createFileRoute("/_authenticated/manage/submissions")({
   head: () => ({
     meta: [
       { title: "Gestion des demandes — Happy Place" },
-      { name: "description", content: "Créez, modifiez et supprimez les demandes dans Happy Place." },
+      {
+        name: "description",
+        content: "Créez, modifiez et supprimez les demandes dans Happy Place.",
+      },
       { property: "og:title", content: "Gestion des demandes — Happy Place" },
-      { property: "og:description", content: "Gérez les demandes des pôles du cabinet dans Happy Place." },
+      {
+        property: "og:description",
+        content: "Gérez les demandes des pôles du cabinet dans Happy Place.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -59,7 +64,6 @@ function ManageSubmissions() {
   const [form, setForm] = useState<SubmissionInput | null>(null);
   const [editing, setEditing] = useState<Submission | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [toDelete, setToDelete] = useState<Submission | null>(null);
 
   const list = useQuery({
     queryKey: ["submissions", "all"],
@@ -79,16 +83,6 @@ function ManageSubmissions() {
       invalidate();
     },
     onError: (e: unknown) => toast.error(rejectionErrorMessage(e)),
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: string) => deleteSubmission(id),
-    onSuccess: () => {
-      toast.success("Demande supprimée");
-      setToDelete(null);
-      invalidate();
-    },
-    onError,
   });
 
   function close() {
@@ -142,7 +136,9 @@ function ManageSubmissions() {
               <p className="font-body-md text-primary font-bold wrap-anywhere">
                 {s.author_name} — {s.team}
               </p>
-              <p className="text-body-sm text-on-surface-variant italic line-clamp-3 whitespace-pre-line wrap-anywhere">“<Linkify text={s.content} />”</p>
+              <p className="text-body-sm text-on-surface-variant italic line-clamp-3 whitespace-pre-line wrap-anywhere">
+                “<Linkify text={s.content} />”
+              </p>
               <Button
                 type="button"
                 variant="link"
@@ -155,7 +151,7 @@ function ManageSubmissions() {
               </Button>
               <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
               <p className="text-[11px] font-label-sm text-on-surface-variant uppercase mt-xs">
-                 {submissionStatusLabels[s.status] ?? s.status} • {timeAgo(s.created_at)}
+                {submissionStatusLabels[s.status] ?? s.status} • {timeAgo(s.created_at)}
               </p>
               {s.status === "refusée" && s.rejection_category && (
                 <p className="text-body-sm text-error mt-xs wrap-anywhere">
@@ -177,7 +173,6 @@ function ManageSubmissions() {
                   rejection_note: s.rejection_note ?? "",
                 });
               }}
-              onDelete={() => setToDelete(s)}
             />
           </article>
         ))}
@@ -188,7 +183,9 @@ function ManageSubmissions() {
 
       <SubmissionReader
         submission={reading}
-        statusLabel={reading ? submissionStatusLabels[reading.status] ?? reading.status : undefined}
+        statusLabel={
+          reading ? (submissionStatusLabels[reading.status] ?? reading.status) : undefined
+        }
         onClose={() => setReading(null)}
       />
       {form && (
@@ -237,7 +234,9 @@ function ManageSubmissions() {
                   >
                     <option value="">— Choisir un motif —</option>
                     {REJECTION_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </Select>
                 </Field>
@@ -254,15 +253,6 @@ function ManageSubmissions() {
             <FormActions pending={save.isPending} onCancel={close} />
           </form>
         </Modal>
-      )}
-
-      {toDelete && (
-        <ConfirmDelete
-          label={toDelete.author_name}
-          pending={remove.isPending}
-          onCancel={() => setToDelete(null)}
-          onConfirm={() => remove.mutate(toDelete.id)}
-        />
       )}
     </section>
   );

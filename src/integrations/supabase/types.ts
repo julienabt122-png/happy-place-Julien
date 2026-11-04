@@ -119,6 +119,9 @@ export type Database = {
       }
       blockers: {
         Row: {
+          masque_le: string | null
+          masque_motif: string | null
+          masque_par: string | null
           created_at: string
           department: string
           description: string | null
@@ -129,6 +132,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           created_at?: string
           department?: string
           description?: string | null
@@ -139,6 +145,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           created_at?: string
           department?: string
           description?: string | null
@@ -228,6 +237,39 @@ export type Database = {
           },
         ]
       }
+      moderation_journal: {
+        Row: {
+          action: string
+          auteur_email: string
+          created_at: string
+          element_id: string
+          id: string
+          libelle: string | null
+          motif: string | null
+          type_element: string
+        }
+        Insert: {
+          action: string
+          auteur_email: string
+          created_at?: string
+          element_id: string
+          id?: string
+          libelle?: string | null
+          motif?: string | null
+          type_element: string
+        }
+        Update: {
+          action?: string
+          auteur_email?: string
+          created_at?: string
+          element_id?: string
+          id?: string
+          libelle?: string | null
+          motif?: string | null
+          type_element?: string
+        }
+        Relationships: []
+      }
       metrics: {
         Row: {
           definition: string | null
@@ -281,6 +323,9 @@ export type Database = {
       }
       news: {
         Row: {
+          masque_le: string | null
+          masque_motif: string | null
+          masque_par: string | null
           author: string
           author_email: string | null
           body: string | null
@@ -293,6 +338,9 @@ export type Database = {
           title: string
         }
         Insert: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           author?: string
           author_email?: string | null
           body?: string | null
@@ -305,6 +353,9 @@ export type Database = {
           title: string
         }
         Update: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           author?: string
           author_email?: string | null
           body?: string | null
@@ -373,6 +424,9 @@ export type Database = {
       }
       submissions: {
         Row: {
+          masque_le: string | null
+          masque_motif: string | null
+          masque_par: string | null
           attachment_name: string | null
           attachment_path: string | null
           author_name: string
@@ -389,6 +443,9 @@ export type Database = {
           team: string
         }
         Insert: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           attachment_name?: string | null
           attachment_path?: string | null
           author_name: string
@@ -405,6 +462,9 @@ export type Database = {
           team: string
         }
         Update: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           attachment_name?: string | null
           attachment_path?: string | null
           author_name?: string
@@ -489,6 +549,18 @@ export type Database = {
       }
       couper_acces: {
         Args: { _allowed_user_id: string }
+        Returns: undefined
+      }
+      masquer_element: {
+        Args: { _type: string; _id: string; _motif: string }
+        Returns: undefined
+      }
+      reafficher_element: {
+        Args: { _type: string; _id: string }
+        Returns: undefined
+      }
+      supprimer_definitivement: {
+        Args: { _type: string; _id: string; _motif: string }
         Returns: undefined
       }
       bulk_import_allowed_users: {
