@@ -255,7 +255,7 @@ function EntreePage() {
                   <>
                     <button
                       type="button"
-                      className="text-left underline"
+                      className="-ml-3 min-h-11 rounded-[4px] px-3 text-left underline hover:bg-[#EFEDED]"
                       onClick={() => {
                         setMode("inscription");
                         setError(null);
@@ -266,7 +266,7 @@ function EntreePage() {
                     </button>
                     <button
                       type="button"
-                      className="text-left underline"
+                      className="-ml-3 min-h-11 rounded-[4px] px-3 text-left underline hover:bg-[#EFEDED]"
                       onClick={() => {
                         setMode("oubli");
                         setError(null);
@@ -280,7 +280,7 @@ function EntreePage() {
                 {mode !== "connexion" && (
                   <button
                     type="button"
-                    className="text-left underline"
+                    className="-ml-3 min-h-11 rounded-[4px] px-3 text-left underline hover:bg-[#EFEDED]"
                     onClick={() => {
                       setMode("connexion");
                       setError(null);

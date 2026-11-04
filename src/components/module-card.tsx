@@ -64,7 +64,7 @@ export function ModuleCard({
             <Link
               to={seeAllTo}
               aria-label={seeAllLabel}
-              className="group inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary"
+              className="group -mr-3 inline-flex min-h-11 items-center gap-1 whitespace-nowrap rounded-[4px] px-3 text-sm font-semibold text-primary hover:bg-[#E2DEDD]"
             >
               <span className="underline decoration-1 underline-offset-4 group-hover:decoration-2">
                 Voir tout
