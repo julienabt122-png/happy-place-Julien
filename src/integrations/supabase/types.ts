@@ -487,6 +487,10 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      couper_acces: {
+        Args: { _allowed_user_id: string }
+        Returns: undefined
+      }
       bulk_import_allowed_users: {
         Args: { _dry_run?: boolean; _rows: Json }
         Returns: Json
