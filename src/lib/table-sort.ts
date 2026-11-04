@@ -22,19 +22,29 @@ export const dateValue = (iso: string | null | undefined): number | null =>
   iso ? new Date(iso).getTime() : null;
 
 /**
- * Tri par colonne d'une liste de module. 1er clic : croissant, 2e : décroissant, 3e : ordre d'origine.
+ * Tri par colonne d'une liste de module. 1er clic : croissant (décroissant pour les colonnes `firstDesc`), 2e : sens inverse, 3e : ordre d'origine.
  * Le tri est stable : à valeurs égales, l'ordre d'origine est conservé.
  */
-export function useTableSort<T>(rows: T[], accessors: Record<string, (row: T) => SortValue>) {
+export function useTableSort<T>(
+  rows: T[],
+  accessors: Record<string, (row: T) => SortValue>,
+  /** Colonnes dont le 1er clic trie en décroissant (ex. une date : du plus récent au plus ancien). */
+  firstDesc: string[] = [],
+) {
   const [sort, setSort] = useState<SortState>(null);
 
-  const toggle = useCallback((key: string) => {
-    setSort((cur) => {
-      if (!cur || cur.key !== key) return { key, dir: "asc" };
-      if (cur.dir === "asc") return { key, dir: "desc" };
-      return null;
-    });
-  }, []);
+  const toggle = useCallback(
+    (key: string) => {
+      setSort((cur) => {
+        const first: SortDir = firstDesc.includes(key) ? "desc" : "asc";
+        if (!cur || cur.key !== key) return { key, dir: first };
+        if (cur.dir === first) return { key, dir: first === "asc" ? "desc" : "asc" };
+        return null;
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- liste de clés recréée à chaque rendu
+    [firstDesc.join("|")],
+  );
 
   const sorted = useMemo(() => {
     const get = sort ? accessors[sort.key] : undefined;
