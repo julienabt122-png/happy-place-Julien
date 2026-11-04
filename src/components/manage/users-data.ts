@@ -121,6 +121,7 @@ export async function addUser(v: {
     await supabase.from("allowed_users").delete().eq("id", data.id);
     throw roleError;
   }
+  return data.id as string;
 }
 
 export async function updateRoleAndTeam(v: { id: string; role: AppRole; team?: string }) {
