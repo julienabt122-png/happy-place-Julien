@@ -18,6 +18,7 @@ export type News = {
   created_at: string;
   image_path?: string | null;
   links?: unknown;
+  masque_le?: string | null;
 };
 
 export type Submission = {
@@ -32,6 +33,7 @@ export type Submission = {
   submitted_by_email?: string | null;
   attachment_path?: string | null;
   attachment_name?: string | null;
+  masque_le?: string | null;
 };
 
 export const REJECTION_CATEGORIES = [
@@ -52,6 +54,7 @@ export type Blocker = {
   updated_at: string;
   /** Renvoyé par la table (select *) ; absent des lectures qui ne le demandent pas. */
   created_at?: string;
+  masque_le?: string | null;
 };
 
 export type Metric = {
@@ -364,11 +367,6 @@ export async function updateNews(id: string, input: NewsInput, media?: MediaDraf
   if (media) await applyNewsImage(id, media);
 }
 
-export async function deleteNews(id: string, imagePath?: string | null) {
-  await removeNewsImageFile(imagePath);
-  const { error } = await db.from("news").delete().eq("id", id);
-  if (error) throw error;
-}
 
 export async function fetchAllSubmissions(): Promise<Submission[]> {
   const { data, error } = await db
@@ -434,10 +432,6 @@ export async function updateSubmission(id: string, input: SubmissionInput) {
   if (error) throw error;
 }
 
-export async function deleteSubmission(id: string) {
-  const { error } = await db.from("submissions").delete().eq("id", id);
-  if (error) throw error;
-}
 
 export async function fetchAllBlockers(): Promise<Blocker[]> {
   const { data, error } = await db
@@ -460,11 +454,6 @@ export async function updateBlocker(id: string, input: BlockerInput) {
     .from("blockers")
     .update({ ...input, severity: input.severity as Enums["blocker_severity"], status: input.status as Enums["blocker_status"], updated_at: new Date().toISOString() })
     .eq("id", id);
-  if (error) throw error;
-}
-
-export async function deleteBlocker(id: string) {
-  const { error } = await db.from("blockers").delete().eq("id", id);
   if (error) throw error;
 }
 

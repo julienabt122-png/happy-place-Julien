@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DataTable, ListFooter, Td, Tr, type DataColumn } from "@/components/data-table";
 import { EmptyState, ErrorState, LoadingState } from "@/components/empty-state";
@@ -8,11 +8,12 @@ import { ModuleCard } from "@/components/module-card";
 import { PageHeader, SummaryLink } from "@/components/page-header";
 import { BlockerFormDialog } from "@/components/modules/blocker-form-dialog";
 import { BlockerReader } from "@/components/modules/blocker-reader";
-import { ConfirmDialog } from "@/components/modules/confirm-dialog";
+import { ModerationDialog } from "@/components/modules/moderation-dialog";
 import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
-import { deleteBlocker, fetchAllBlockers, type Blocker } from "@/lib/dashboard";
+import { fetchAllBlockers, type Blocker } from "@/lib/dashboard";
+import { masquerElement, reafficherElement, supprimerDefinitivement } from "@/lib/moderation";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { plural } from "@/lib/plural";
 
@@ -51,18 +52,33 @@ export function BlockersModule({ role }: { role: AppRole }) {
   const [limit, setLimit] = useState(LIST_PAGE_SIZE);
   const [reading, setReading] = useState<Blocker | null>(null);
   const [editing, setEditing] = useState<Blocker | null>(null);
-  const [toDelete, setToDelete] = useState<Blocker | null>(null);
+  const [cible, setCible] = useState<Blocker | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   const list = useQuery({ queryKey: ["blockers", "all"], queryFn: fetchAllBlockers, retry: false });
 
-  const remove = useMutation({
-    mutationFn: (id: string) => deleteBlocker(id),
-    onSuccess: () => {
-      toast.success("Point bloquant supprimé");
+  // Modération : un point bloquant visible est d'abord masqué ; masqué, il peut être supprimé ou réaffiché.
+  const action = useMutation({
+    mutationFn: ({ b, motif }: { b: Blocker; motif: string }) =>
+      b.masque_le
+        ? supprimerDefinitivement("point_bloquant", b.id, motif)
+        : masquerElement("point_bloquant", b.id, motif),
+    onSuccess: (_r, { b }) => {
+      toast.success(b.masque_le ? "Point bloquant supprimé" : "Point bloquant masqué");
       qc.invalidateQueries({ queryKey: ["blockers"] });
     },
     onError: (e: unknown) => toast.error((e as Error).message),
-    onSettled: () => setToDelete(null),
+    onSettled: () => setCible(null),
+  });
+
+  const reafficher = useMutation({
+    mutationFn: (b: Blocker) => reafficherElement("point_bloquant", b.id),
+    onSuccess: () => {
+      toast.success("Point bloquant réaffiché");
+      qc.invalidateQueries({ queryKey: ["blockers"] });
+    },
+    onError: (e: unknown) => toast.error((e as Error).message),
+    onSettled: () => setCible(null),
   });
 
   const all = useMemo(() => list.data ?? [], [list.data]);
@@ -245,11 +261,23 @@ export function BlockersModule({ role }: { role: AppRole }) {
                       <Button
                         type="button"
                         variant="outline"
-                        aria-label={`Supprimer : ${b.title}`}
-                        onClick={() => setToDelete(b)}
+                        aria-label={
+                          b.masque_le
+                            ? `Supprimer définitivement : ${b.title}`
+                            : `Masquer : ${b.title}`
+                        }
+                        aria-haspopup="dialog"
+                        onClick={(e) => {
+                          openerRef.current = e.currentTarget;
+                          setCible(b);
+                        }}
                         className="px-3.5"
                       >
-                        <Icon name="delete" className="text-[18px]" /> Supprimer
+                        <Icon
+                          name={b.masque_le ? "delete" : "visibility_off"}
+                          className="text-[18px]"
+                        />{" "}
+                        {b.masque_le ? "Supprimer" : "Masquer"}
                       </Button>
                     </div>
                   </Td>
@@ -264,18 +292,15 @@ export function BlockersModule({ role }: { role: AppRole }) {
       {editing && (
         <BlockerFormDialog blocker={editing} open onOpenChange={(o) => !o && setEditing(null)} />
       )}
-      <ConfirmDialog
-        open={!!toDelete}
-        onOpenChange={(o) => !o && setToDelete(null)}
-        title="Supprimer le point bloquant"
-        message={
-          toDelete
-            ? `Supprimer définitivement « ${toDelete.title} » ? Cette action est irréversible.`
-            : ""
-        }
-        confirmLabel="Supprimer"
-        pending={remove.isPending}
-        onConfirm={() => toDelete && remove.mutate(toDelete.id)}
+      <ModerationDialog
+        open={!!cible}
+        onOpenChange={(o) => !o && !action.isPending && setCible(null)}
+        mode={cible?.masque_le ? "supprimer" : "masquer"}
+        titre={cible?.title ?? ""}
+        pending={action.isPending || reafficher.isPending}
+        onConfirm={(motif) => cible && action.mutate({ b: cible, motif })}
+        onReafficher={cible?.masque_le ? () => cible && reafficher.mutate(cible) : undefined}
+        returnFocusRef={openerRef}
       />
     </div>
   );

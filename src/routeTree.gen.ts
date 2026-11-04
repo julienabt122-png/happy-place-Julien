@@ -22,6 +22,7 @@ import { Route as AuthenticatedPointsBloquantsRouteImport } from './routes/_auth
 import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenticated/manage.index'
 import { Route as AuthenticatedManageBlockersRouteImport } from './routes/_authenticated/manage.blockers'
 import { Route as AuthenticatedManageMetricsRouteImport } from './routes/_authenticated/manage.metrics'
+import { Route as AuthenticatedManageModerationRouteImport } from './routes/_authenticated/manage.moderation'
 import { Route as AuthenticatedManageSubmissionsRouteImport } from './routes/_authenticated/manage.submissions'
 import { Route as AuthenticatedManageTeamsRouteImport } from './routes/_authenticated/manage.teams'
 import { Route as AuthenticatedManageUsersRouteImport } from './routes/_authenticated/manage.users'
@@ -95,6 +96,12 @@ const AuthenticatedManageMetricsRoute =
     path: '/metrics',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
+const AuthenticatedManageModerationRoute =
+  AuthenticatedManageModerationRouteImport.update({
+    id: '/moderation',
+    path: '/moderation',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
 const AuthenticatedManageSubmissionsRoute =
   AuthenticatedManageSubmissionsRouteImport.update({
     id: '/submissions',
@@ -126,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/points-bloquants': typeof AuthenticatedPointsBloquantsRoute
   '/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
+  '/manage/moderation': typeof AuthenticatedManageModerationRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
@@ -142,6 +150,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
+  '/manage/moderation': typeof AuthenticatedManageModerationRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
@@ -161,6 +170,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/_authenticated/manage/metrics': typeof AuthenticatedManageMetricsRoute
+  '/_authenticated/manage/moderation': typeof AuthenticatedManageModerationRoute
   '/_authenticated/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/_authenticated/manage/teams': typeof AuthenticatedManageTeamsRoute
   '/_authenticated/manage/users': typeof AuthenticatedManageUsersRoute
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/points-bloquants'
     | '/manage/blockers'
     | '/manage/metrics'
+    | '/manage/moderation'
     | '/manage/submissions'
     | '/manage/teams'
     | '/manage/users'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/'
     | '/manage/blockers'
     | '/manage/metrics'
+    | '/manage/moderation'
     | '/manage/submissions'
     | '/manage/teams'
     | '/manage/users'
@@ -214,6 +226,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/manage/blockers'
     | '/_authenticated/manage/metrics'
+    | '/_authenticated/manage/moderation'
     | '/_authenticated/manage/submissions'
     | '/_authenticated/manage/teams'
     | '/_authenticated/manage/users'
@@ -320,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageMetricsRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
+    '/_authenticated/manage/moderation': {
+      id: '/_authenticated/manage/moderation'
+      path: '/moderation'
+      fullPath: '/manage/moderation'
+      preLoaderRoute: typeof AuthenticatedManageModerationRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
     '/_authenticated/manage/submissions': {
       id: '/_authenticated/manage/submissions'
       path: '/submissions'
@@ -347,6 +367,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedManageRouteChildren {
   AuthenticatedManageBlockersRoute: typeof AuthenticatedManageBlockersRoute
   AuthenticatedManageMetricsRoute: typeof AuthenticatedManageMetricsRoute
+  AuthenticatedManageModerationRoute: typeof AuthenticatedManageModerationRoute
   AuthenticatedManageSubmissionsRoute: typeof AuthenticatedManageSubmissionsRoute
   AuthenticatedManageTeamsRoute: typeof AuthenticatedManageTeamsRoute
   AuthenticatedManageUsersRoute: typeof AuthenticatedManageUsersRoute
@@ -356,6 +377,7 @@ interface AuthenticatedManageRouteChildren {
 const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
   AuthenticatedManageBlockersRoute: AuthenticatedManageBlockersRoute,
   AuthenticatedManageMetricsRoute: AuthenticatedManageMetricsRoute,
+  AuthenticatedManageModerationRoute: AuthenticatedManageModerationRoute,
   AuthenticatedManageSubmissionsRoute: AuthenticatedManageSubmissionsRoute,
   AuthenticatedManageTeamsRoute: AuthenticatedManageTeamsRoute,
   AuthenticatedManageUsersRoute: AuthenticatedManageUsersRoute,
