@@ -288,7 +288,18 @@ export function BlockersModule({ role }: { role: AppRole }) {
         )}
       </ModuleCard>
 
-      <BlockerReader blocker={reading} onClose={() => setReading(null)} />
+      <BlockerReader
+        blocker={reading}
+        onClose={() => setReading(null)}
+        onModerate={
+          isAdmin
+            ? (b) => {
+                setReading(null);
+                setCible(b);
+              }
+            : undefined
+        }
+      />
       {editing && (
         <BlockerFormDialog blocker={editing} open onOpenChange={(o) => !o && setEditing(null)} />
       )}
