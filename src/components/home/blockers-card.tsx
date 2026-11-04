@@ -62,7 +62,7 @@ export function BlockersCard({
             <RowMainButton
               label={`voir le point bloquant, ${b.title}`}
               onOpen={() => setLu(b)}
-              className="flex w-full items-center justify-between gap-4"
+              className="flex min-h-11 w-full items-center justify-between gap-4"
             >
               <span className="min-w-0 truncate text-sm font-medium text-primary">{b.title}</span>
               <span className="flex shrink-0 items-center gap-2">

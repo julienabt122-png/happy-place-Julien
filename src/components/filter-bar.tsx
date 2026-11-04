@@ -80,7 +80,7 @@ export function SearchField({
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="h-full w-full bg-transparent font-label-md text-[13px] text-primary placeholder:text-on-surface-variant"
+        className="-my-px h-[calc(100%+2px)] w-full bg-transparent font-label-md text-[13px] text-primary placeholder:text-on-surface-variant"
       />
     </div>
   );
