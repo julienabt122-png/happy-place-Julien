@@ -16,6 +16,7 @@ import { NewsThumb } from "@/components/news-thumb";
 import { NewsStatusTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
+import { dateValue, useTableSort } from "@/lib/table-sort";
 import { deleteDraftNews, fetchNews, timeAgo, type News } from "@/lib/dashboard";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
 import { canEditPublishedNews } from "@/lib/news-permissions";
@@ -123,7 +124,12 @@ export function NewsModule({
           (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         )
       : filtered;
-  const shown = ordered.slice(0, limit);
+  const sort = useTableSort(ordered, {
+    titre: (n) => n.title,
+    statut: (n) => n.status,
+    date: (n) => dateValue(n.created_at),
+  });
+  const shown = sort.rows.slice(0, limit);
 
   function changeFilter(next: StatusFilter) {
     setFilter(next);
@@ -131,9 +137,9 @@ export function NewsModule({
   }
 
   const columns: DataColumn[] = [
-    { label: "Actualité" },
-    { label: "Statut", className: "w-[120px]" },
-    { label: "Date", className: "w-[144px]" },
+    { label: "Actualité", sortKey: "titre" },
+    { label: "Statut", className: "w-[120px]", sortKey: "statut" },
+    { label: "Date", className: "w-[144px]", sortKey: "date" },
     ...(canWriteNews ? [{ label: "Actions", className: "w-[380px] text-right" }] : []),
   ];
 
@@ -253,7 +259,12 @@ export function NewsModule({
           <EmptyState message="Aucune actualité ne correspond à ces filtres." />
         )}
         {shown.length > 0 && (
-          <DataTable label="Liste des actualités" columns={columns}>
+          <DataTable
+            label="Liste des actualités"
+            columns={columns}
+            sort={sort.sort}
+            onSort={sort.onSort}
+          >
             {shown.map((n) => {
               // Mêmes règles qu'avant : sur un brouillon, l'admin, ou le manager sur ses propres brouillons.
               const canEditDraft =

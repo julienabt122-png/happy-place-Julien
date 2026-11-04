@@ -12,6 +12,7 @@ import { ModerationDialog } from "@/components/modules/moderation-dialog";
 import { BlockerStatusTag, SeverityTag } from "@/components/status-tag";
 import { Button } from "@/components/ui/button";
 import type { AppRole } from "@/lib/auth";
+import { useTableSort } from "@/lib/table-sort";
 import { fetchAllBlockers, type Blocker } from "@/lib/dashboard";
 import { masquerElement, reafficherElement, supprimerDefinitivement } from "@/lib/moderation";
 import { LIST_PAGE_SIZE } from "@/lib/list-page";
@@ -39,6 +40,15 @@ function Icon({ name, className = "" }: { name: string; className?: string }) {
     </span>
   );
 }
+
+/** Rangs pour le tri par gravité : du plus grave au moins grave, puis du plus urgent au résolu. */
+const SEVERITY_RANK: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+const STATUS_RANK: Record<string, number> = {
+  OUVERT: 0,
+  "EN COURS": 1,
+  SURVEILLANCE: 2,
+  RÉSOLU: 3,
+};
 
 const longDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { dateStyle: "long" });
 
@@ -93,7 +103,11 @@ export function BlockersModule({ role }: { role: AppRole }) {
         (b.description ?? "").toLowerCase().includes(needle) ||
         b.department.toLowerCase().includes(needle)),
   );
-  const shown = filtered.slice(0, limit);
+  const sort = useTableSort(filtered, {
+    titre: (b) => b.title,
+    gravite: (b) => (SEVERITY_RANK[b.severity] ?? 9) * 10 + (STATUS_RANK[b.status] ?? 9),
+  });
+  const shown = sort.rows.slice(0, limit);
 
   function changeFilter(next: StatusFilter) {
     setFilter(next);
@@ -101,8 +115,8 @@ export function BlockersModule({ role }: { role: AppRole }) {
   }
 
   const columns: DataColumn[] = [
-    { label: "Point bloquant" },
-    { label: "Criticité et statut", className: "w-[176px]" },
+    { label: "Point bloquant", sortKey: "titre" },
+    { label: "Criticité et statut", className: "w-[176px]", sortKey: "gravite" },
     ...(isAdmin ? [{ label: "Actions", className: "w-[256px] text-right" }] : []),
   ];
 
@@ -211,7 +225,12 @@ export function BlockersModule({ role }: { role: AppRole }) {
           <EmptyState message="Aucun point bloquant ne correspond à ces filtres." />
         )}
         {shown.length > 0 && (
-          <DataTable label="Liste des points bloquants" columns={columns}>
+          <DataTable
+            label="Liste des points bloquants"
+            columns={columns}
+            sort={sort.sort}
+            onSort={sort.onSort}
+          >
             {shown.map((b) => (
               <Tr key={b.id}>
                 <Td>
