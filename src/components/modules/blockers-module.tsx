@@ -20,12 +20,18 @@ import { plural } from "@/lib/plural";
 
 type StatusFilter = "all" | "open" | "progress" | "resolved";
 
+/** « En cours » (filtre par défaut) = tout ce qui n'est pas résolu : ouvert, en cours, sous surveillance. */
+const RESOLVED = "RÉSOLU";
+
 // Les valeurs enregistrées en base restent OUVERT, EN COURS, SURVEILLANCE, RÉSOLU.
-const STATUS_BY_FILTER: Record<Exclude<StatusFilter, "all">, string> = {
+const STATUS_BY_FILTER: Record<"open" | "resolved", string> = {
   open: "OUVERT",
-  progress: "EN COURS",
-  resolved: "RÉSOLU",
+  resolved: RESOLVED,
 };
+
+const matchesFilter = (status: string, filter: StatusFilter) =>
+  filter === "all" ||
+  (filter === "progress" ? status !== RESOLVED : status === STATUS_BY_FILTER[filter]);
 
 const SEVERITY_OPTIONS = [
   { value: "critical", label: "Critique" },
@@ -56,7 +62,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
   const qc = useQueryClient();
   // Écriture réservée à l'admin (la base refuse les autres rôles) : eux ne voient aucune action.
   const isAdmin = role === "admin";
-  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [filter, setFilter] = useState<StatusFilter>("progress");
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("");
   const [limit, setLimit] = useState(LIST_PAGE_SIZE);
@@ -96,7 +102,7 @@ export function BlockersModule({ role }: { role: AppRole }) {
   const needle = query.trim().toLowerCase();
   const filtered = all.filter(
     (b) =>
-      (filter === "all" || b.status === STATUS_BY_FILTER[filter]) &&
+      matchesFilter(b.status, filter) &&
       (!severity || b.severity === severity) &&
       (!needle ||
         b.title.toLowerCase().includes(needle) ||
@@ -163,12 +169,13 @@ export function BlockersModule({ role }: { role: AppRole }) {
             label="Filtrer par statut"
             value={filter}
             onChange={changeFilter}
-            options={[
-              { id: "all", label: "Tous" },
-              { id: "open", label: "Ouverts" },
-              { id: "progress", label: "En cours" },
-              { id: "resolved", label: "Résolus" },
-            ]}
+            options={(["progress", "open", "resolved", "all"] as const).map((id) => ({
+              id,
+              label: { progress: "En cours", open: "Ouverts", resolved: "Résolus", all: "Tous" }[
+                id
+              ],
+              count: all.filter((b) => matchesFilter(b.status, id)).length,
+            }))}
           />
         }
         right={

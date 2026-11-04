@@ -20,7 +20,8 @@ export function FilterChips<T extends string>({
 }: {
   label: string;
   value: T;
-  options: { id: T; label: string }[];
+  /** `count` facultatif : nombre d'éléments du filtre, affiché dans la pastille. */
+  options: { id: T; label: string; count?: number }[];
   onChange: (value: T) => void;
 }) {
   return (
@@ -39,6 +40,9 @@ export function FilterChips<T extends string>({
           }`}
         >
           {o.label}
+          {o.count !== undefined && (
+            <span className="ml-1.5 font-label-sm text-xs text-on-surface-variant">{o.count}</span>
+          )}
         </Button>
       ))}
     </div>
