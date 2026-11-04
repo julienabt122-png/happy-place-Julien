@@ -457,11 +457,6 @@ export async function updateBlocker(id: string, input: BlockerInput) {
   if (error) throw error;
 }
 
-export async function deleteBlocker(id: string) {
-  const { error } = await db.from("blockers").delete().eq("id", id);
-  if (error) throw error;
-}
-
 export async function createMetric(input: MetricInput) {
   const { error } = await db.from("metrics").insert(input);
   if (error) throw error;

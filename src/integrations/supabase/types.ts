@@ -119,6 +119,9 @@ export type Database = {
       }
       blockers: {
         Row: {
+          masque_le: string | null
+          masque_motif: string | null
+          masque_par: string | null
           created_at: string
           department: string
           description: string | null
@@ -129,6 +132,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           created_at?: string
           department?: string
           description?: string | null
@@ -139,6 +145,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           created_at?: string
           department?: string
           description?: string | null
@@ -314,6 +323,9 @@ export type Database = {
       }
       news: {
         Row: {
+          masque_le: string | null
+          masque_motif: string | null
+          masque_par: string | null
           author: string
           author_email: string | null
           body: string | null
@@ -326,6 +338,9 @@ export type Database = {
           title: string
         }
         Insert: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           author?: string
           author_email?: string | null
           body?: string | null
@@ -338,6 +353,9 @@ export type Database = {
           title: string
         }
         Update: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           author?: string
           author_email?: string | null
           body?: string | null
@@ -406,6 +424,9 @@ export type Database = {
       }
       submissions: {
         Row: {
+          masque_le: string | null
+          masque_motif: string | null
+          masque_par: string | null
           attachment_name: string | null
           attachment_path: string | null
           author_name: string
@@ -422,6 +443,9 @@ export type Database = {
           team: string
         }
         Insert: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           attachment_name?: string | null
           attachment_path?: string | null
           author_name: string
@@ -438,6 +462,9 @@ export type Database = {
           team: string
         }
         Update: {
+          masque_le?: string | null
+          masque_motif?: string | null
+          masque_par?: string | null
           attachment_name?: string | null
           attachment_path?: string | null
           author_name?: string
